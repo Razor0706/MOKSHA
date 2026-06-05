@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOKSHA &ndash; AI Diagnostic Support System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="landing-shell">
+        <section class="hero-panel">
+            <div class="hero-content">
+                <div class="brand-row">
+                    <div class="brand-mark">M</div>
+                    <div>
+                        <p class="eyebrow">AI Diagnostic Support System</p>
+                        <h1>MOKSHA</h1>
+                    </div>
+                </div>
+
+                <p class="intro">
+                    Upload a medical report image and get structured extraction, report classification,
+                    risk scoring, condition detection, and specialist guidance in seconds.
+                </p>
+
+                <form class="upload-form" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                    <label class="file-drop">
+                        <span class="file-title">Upload medical report</span>
+                        <span class="file-subtitle">Supports PNG, JPG, and JPEG reports</span>
+                        <input type="file" name="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required>
+                    </label>
+                    <button type="submit">Analyze Report</button>
+                </form>
+
+                <p class="disclaimer compact">This is not a diagnosis. Consult a medical professional.</p>
+            </div>
+
+            <aside class="capability-panel" aria-label="MOKSHA capabilities">
+                <div class="metric-tile">
+                    <span>Report Types</span>
+                    <strong>Lipid + Sugar</strong>
+                </div>
+                <div class="metric-tile">
+                    <span>Risk Engine</span>
+                    <strong>Clinical + ML</strong>
+                </div>
+                <div class="metric-tile">
+                    <span>Output</span>
+                    <strong>Explainable</strong>
+                </div>
+            </aside>
+        </section>
+    </main>
+</body>
+</html>

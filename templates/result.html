@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Summary - MOKSHA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="dashboard-shell">
+        <section class="dashboard-card">
+            <div class="topbar">
+                <div>
+                    <p class="eyebrow">MOKSHA Analysis</p>
+                    <h1>Diagnostic Support Summary</h1>
+                </div>
+                <a class="back-link" href="{{ url_for('home') }}">Go Back</a>
+            </div>
+
+            {% if error %}
+                <div class="alert-card">
+                    <span>OCR Confidence Alert</span>
+                    <strong>{{ error }}</strong>
+                    <p>This is not a diagnosis. Consult a medical professional.</p>
+                </div>
+            {% else %}
+                <section class="summary-grid" aria-label="Report summary">
+                    <div class="summary-card">
+                        <span>Report Summary</span>
+                        <strong>{{ report_type }}</strong>
+                        <p>AI-assisted extraction from the uploaded medical report image.</p>
+                    </div>
+                    <div class="summary-card">
+                        <span>Risk Level</span>
+                        <strong class="risk-badge {{ risk.class_name }}">{{ risk.level }}</strong>
+                        {% if risk.confidence %}
+                            <p>ML confidence: {{ risk.confidence }}%</p>
+                        {% else %}
+                            <p>Clinical rules used where ML inputs were unavailable.</p>
+                        {% endif %}
+                    </div>
+                    <div class="summary-card">
+                        <span>Condition Detected</span>
+                        <strong>{{ condition }}</strong>
+                        <p>Based on extracted glucose, cholesterol, and LDL markers.</p>
+                    </div>
+                    <div class="summary-card">
+                        <span>Recommended Specialist</span>
+                        <strong>{{ specialist }}</strong>
+                        <p>Use this as triage guidance, not a final medical decision.</p>
+                    </div>
+                </section>
+
+                <section class="product-section">
+                    <div class="section-heading">
+                        <span>Extracted Values</span>
+                        <h2>Structured Biomarker Table</h2>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Extracted Value</th>
+                                    <th>Unit</th>
+                                    <th>Mapping Range</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in value_rows %}
+                                    <tr>
+                                        <td>{{ row.name }}</td>
+                                        <td>{{ row.value }}</td>
+                                        <td>{{ row.unit }}</td>
+                                        <td>{{ row.range }}</td>
+                                        <td>
+                                            {% if row.detected %}
+                                                <span class="status-pill detected">Detected</span>
+                                            {% else %}
+                                                <span class="status-pill missing">Missing</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="product-section insight-grid">
+                    <div class="insight-card">
+                        <span>Why this result?</span>
+                        <h2>Explainable Output</h2>
+                        <ul class="reason-list">
+                            {% for reason in risk.reasons %}
+                                <li>{{ reason }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="insight-card next-step-card">
+                        <span>Next Steps</span>
+                        <h2>{{ risk.next_steps }}</h2>
+                        <p>
+                            Take action based on the risk tier and review the original report with a qualified clinician.
+                        </p>
+                    </div>
+                </section>
+
+                <details class="ocr-debug">
+                    <summary>Debug Mode: OCR text used for extraction</summary>
+                    <pre>{{ ocr_text }}</pre>
+                </details>
+
+                <p class="disclaimer">
+                    This is not a diagnosis. Consult a medical professional before making health decisions.
+                </p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>
