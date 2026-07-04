@@ -214,6 +214,12 @@ pip install -r requirements.txt
 
 Optional enhancements:
 
+- Install optional ML and explainability packages separately with:
+
+```bash
+pip install -r requirements-optional.txt
+```
+
 - `xgboost` for additional model comparison
 - `shap` for model explainability
 
@@ -235,6 +241,10 @@ Optional packages:
 
 - xgboost
 - shap
+
+Optional dependency file:
+
+- `requirements-optional.txt` for advanced model training and explainability extras
 
 ## Running the app
 
