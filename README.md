@@ -81,7 +81,7 @@ MOKSHA is designed with privacy-first defaults:
 - The uploaded file is deleted immediately after OCR and analysis complete, even when an error occurs.
 - OCR debug output is redacted before rendering to the browser.
 - Training pipelines remove PII-like columns automatically before preprocessing.
-- The application is designed to retain only medically useful extracted markers when persistence is needed in the future.
+- The application is designed to retain only medically useful extracted markers if persistence is ever introduced later.
 
 Examples of identifiers explicitly excluded from training and persistence:
 
@@ -375,19 +375,6 @@ This separation keeps model governance auditable and makes future retraining eas
 - PII redaction is applied to OCR text shown in debug mode.
 - The training pipeline is privacy-aware by default.
 
-## Future scope
-
-The codebase is organized so it can expand into:
-
-- PDF report ingestion
-- Hospital or LIS integration
-- FHIR-compatible payload generation
-- Longitudinal patient history support
-- Multi-model condition packs
-- Imaging workflows such as X-ray assistance
-- Structured clinician review dashboards
-- Audit logging and model registry support
-
 ## Production-readiness notes
 
 This repository is a strong prototype foundation, not a regulated medical device.
@@ -403,6 +390,10 @@ Before real-world deployment, add:
 - Monitoring for OCR drift and model drift
 - Input validation for PDFs and larger file types
 - Containerization and CI/CD with security scanning
+
+## License
+
+This project is licensed under the Apache License 2.0. See the `LICENSE` file for details.
 
 ## Medical ethics statement
 
