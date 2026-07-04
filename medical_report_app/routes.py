@@ -1,4 +1,7 @@
 from flask import Blueprint, render_template, request
+from pathlib import Path
+from uuid import uuid4
+
 from werkzeug.utils import secure_filename
 
 from .config import UPLOAD_FOLDER, is_allowed_file
@@ -22,7 +25,9 @@ def upload():
     if not is_allowed_file(uploaded_file.filename):
         return render_template("result.html", error="Only PNG, JPG, and JPEG images are supported.")
 
-    filename = secure_filename(uploaded_file.filename)
+    original_name = secure_filename(uploaded_file.filename)
+    extension = Path(original_name).suffix.lower()
+    filename = f"{uuid4().hex}{extension}"
     filepath = UPLOAD_FOLDER / filename
     uploaded_file.save(filepath)
 

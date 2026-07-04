@@ -1,24 +1,30 @@
-from medical_report_app.constants import TEST_DEFINITIONS
+from .clinical_rules import assess_parameters
 
 
 def format_value(value):
     if value is None:
         return "Not detected"
+    if isinstance(value, str):
+        return value
     if float(value).is_integer():
         return str(int(value))
     return f"{value:.1f}"
 
 
 def build_value_rows(values):
-    rows = []
-    for key, definition in TEST_DEFINITIONS.items():
-        rows.append(
+    _, ordered_rows = assess_parameters(values)
+    formatted_rows = []
+    for row in ordered_rows:
+        formatted_rows.append(
             {
-                "name": definition["label"],
-                "value": format_value(values.get(key)),
-                "unit": definition["unit"] if values.get(key) is not None else "-",
-                "range": f"{definition['range'][0]}-{definition['range'][1]}",
-                "detected": values.get(key) is not None,
+                "name": row["label"],
+                "value": format_value(row["value"]),
+                "unit": row["unit"] if row["value"] is not None else "-",
+                "range": row["normal_range"],
+                "detected": row["value"] is not None,
+                "status": row["status"],
+                "flag_class": row["flag_class"],
+                "interpretation": row["interpretation"],
             }
         )
-    return rows
+    return formatted_rows

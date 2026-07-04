@@ -1,0 +1,11 @@
+{
+  "primary_dataset": {
+    "name": "UCI Heart Disease",
+    "source": "UCI Machine Learning Repository",
+    "url": "https://archive.ics.uci.edu/dataset/45/heart+disease",
+    "doi": "10.24432/C52P4X",
+    "license": "CC BY 4.0",
+    "intended_use": "Cardiometabolic screening support model training",
+    "pii_policy": "Automatic removal of PII-like columns before preprocessing"
+  }
+}

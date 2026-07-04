@@ -2,7 +2,8 @@ import re
 from difflib import SequenceMatcher
 
 
-VALUE_TOKEN_PATTERN = re.compile(r"(?<![A-Za-z0-9])[\dOoIiLl]{2,3}(?:[.,][\dOoIiLl]{1,2})?(?![A-Za-z0-9])")
+VALUE_TOKEN_PATTERN = re.compile(r"(?<![A-Za-z0-9])[\dOoIiLl]{1,3}(?:[.,][\dOoIiLl]{1,2})?(?![A-Za-z0-9])")
+BP_PATTERN = re.compile(r"(?<!\d)([0-2]?[\dOoIiLl]{2})\s*[/|\\-]\s*([0-1]?[\dOoIiLl]{2})(?!\d)")
 
 
 def normalize_ocr_text(text):
@@ -39,8 +40,18 @@ def normalize_numeric_token(token):
 def clean_label_text(text):
     text = normalize_ocr_text(text).lower()
     text = text.replace("0", "o").replace("1", "l")
-    text = re.sub(r"[^a-z0-9\s-]", " ", text)
+    text = re.sub(r"[^a-z0-9\s/%-]", " ", text)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def safe_float(token):
+    normalized = normalize_numeric_token(token)
+    if not normalized:
+        return None
+    try:
+        return float(normalized)
+    except ValueError:
+        return None
 
 
 def find_numbers(line):
@@ -51,15 +62,27 @@ def find_numbers(line):
         if "<" in prefix or ">" in prefix:
             continue
 
-        normalized = normalize_numeric_token(token)
-        try:
-            value = float(normalized)
-        except ValueError:
+        value = safe_float(token)
+        if value is None:
             continue
 
-        if 20 <= value <= 500 and int(value) not in range(1900, 2101):
+        if 0.3 <= value <= 600 and int(value) not in range(1900, 2101):
             numbers.append(value)
     return numbers
+
+
+def find_blood_pressure(line):
+    match = BP_PATTERN.search(line)
+    if not match:
+        return None
+
+    systolic = safe_float(match.group(1))
+    diastolic = safe_float(match.group(2))
+    if systolic is None or diastolic is None:
+        return None
+    if 80 <= systolic <= 240 and 40 <= diastolic <= 140:
+        return int(round(systolic)), int(round(diastolic))
+    return None
 
 
 def similarity(left, right):
@@ -93,11 +116,11 @@ def range_score(value, expected_range, ideal_range):
     expected_low, expected_high = expected_range
     ideal_low, ideal_high = ideal_range
 
-    if expected_low <= value <= expected_high:
-        return 1.0
     if ideal_low <= value <= ideal_high:
-        return 0.8
+        return 1.0
+    if expected_low <= value <= expected_high:
+        return 0.85
 
     nearest = expected_low if value < expected_low else expected_high
     distance = abs(value - nearest)
-    return max(0.0, 0.55 - (distance / 160))
+    return max(0.0, 0.6 - (distance / 220))

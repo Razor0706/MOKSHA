@@ -132,6 +132,21 @@ h2 {
     gap: 18px;
 }
 
+.privacy-strip {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: #f1f8fb;
+    color: var(--muted);
+    border: 1px solid #d5e8f0;
+    line-height: 1.5;
+}
+
+.privacy-strip strong {
+    color: var(--primary-dark);
+}
+
 .file-drop {
     display: grid;
     gap: 8px;
@@ -236,6 +251,10 @@ button:hover,
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
+}
+
+.summary-grid-secondary .summary-card strong {
+    font-size: 20px;
 }
 
 .summary-card {
@@ -355,9 +374,37 @@ tbody tr:last-child td {
     color: var(--green);
 }
 
+.status-pill.normal {
+    background: var(--soft-green);
+    color: var(--green);
+}
+
+.status-pill.moderate,
+.status-pill.low {
+    background: var(--soft-orange);
+    color: var(--orange);
+}
+
+.status-pill.high {
+    background: var(--soft-red);
+    color: var(--red);
+}
+
 .status-pill.missing {
     background: #eef2f6;
     color: var(--gray);
+}
+
+.table-row.moderate {
+    background: #fffaf1;
+}
+
+.table-row.high {
+    background: #fff6f6;
+}
+
+.table-row.normal {
+    background: #fbfefd;
 }
 
 .insight-grid {
@@ -383,6 +430,25 @@ tbody tr:last-child td {
 
 .next-step-card {
     border-left: 6px solid var(--primary);
+}
+
+.notice-stack {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.notice-card {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f9fcfd;
+}
+
+.notice-card strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--ink);
 }
 
 .ocr-debug {
@@ -438,7 +504,8 @@ tbody tr:last-child td {
 @media (max-width: 900px) {
     .hero-panel,
     .summary-grid,
-    .insight-grid {
+    .insight-grid,
+    .notice-stack {
         grid-template-columns: 1fr;
     }
 

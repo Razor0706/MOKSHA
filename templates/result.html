@@ -34,7 +34,7 @@
                         <span>Risk Level</span>
                         <strong class="risk-badge {{ risk.class_name }}">{{ risk.level }}</strong>
                         {% if risk.confidence %}
-                            <p>ML confidence: {{ risk.confidence }}%</p>
+                            <p>Confidence: {{ risk.confidence }}%</p>
                         {% else %}
                             <p>Clinical rules used where ML inputs were unavailable.</p>
                         {% endif %}
@@ -42,12 +42,39 @@
                     <div class="summary-card">
                         <span>Condition Detected</span>
                         <strong>{{ condition }}</strong>
-                        <p>Based on extracted glucose, cholesterol, and LDL markers.</p>
+                        <p>Derived from extracted biomarkers, published thresholds, and model-assisted screening.</p>
                     </div>
                     <div class="summary-card">
                         <span>Recommended Specialist</span>
                         <strong>{{ specialist }}</strong>
                         <p>Use this as triage guidance, not a final medical decision.</p>
+                    </div>
+                </section>
+
+                <section class="summary-grid summary-grid-secondary" aria-label="AI support details">
+                    <div class="summary-card">
+                        <span>Top Contributing Factors</span>
+                        <strong>{{ risk.top_factors|join(', ') if risk.top_factors else 'Clinical review required' }}</strong>
+                        <p>Most influential markers surfaced for explainability.</p>
+                    </div>
+                    <div class="summary-card">
+                        <span>Model Support</span>
+                        <strong>{{ risk.model_name }}</strong>
+                        {% if risk.model_metrics.roc_auc %}
+                            <p>Validation ROC AUC: {{ "%.2f"|format(risk.model_metrics.roc_auc) }}</p>
+                        {% else %}
+                            <p>Heuristic support path used until a trained bundle is available.</p>
+                        {% endif %}
+                    </div>
+                    <div class="summary-card">
+                        <span>Clinical Explanation</span>
+                        <strong>Combined rule + model reasoning</strong>
+                        <p>{{ risk.explanation }}</p>
+                    </div>
+                    <div class="summary-card">
+                        <span>Privacy Notice</span>
+                        <strong>Ephemeral report handling</strong>
+                        <p>{{ privacy_notice }}</p>
                     </div>
                 </section>
 
@@ -63,24 +90,26 @@
                                     <th>Parameter</th>
                                     <th>Extracted Value</th>
                                     <th>Unit</th>
-                                    <th>Mapping Range</th>
+                                    <th>Normal Range</th>
                                     <th>Status</th>
+                                    <th>Interpretation</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in value_rows %}
-                                    <tr>
+                                    <tr class="table-row {{ row.flag_class }}">
                                         <td>{{ row.name }}</td>
                                         <td>{{ row.value }}</td>
                                         <td>{{ row.unit }}</td>
                                         <td>{{ row.range }}</td>
                                         <td>
                                             {% if row.detected %}
-                                                <span class="status-pill detected">Detected</span>
+                                                <span class="status-pill {{ row.flag_class }}">{{ row.status }}</span>
                                             {% else %}
                                                 <span class="status-pill missing">Missing</span>
                                             {% endif %}
                                         </td>
+                                        <td>{{ row.interpretation }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -100,15 +129,38 @@
                     </div>
                     <div class="insight-card next-step-card">
                         <span>Next Steps</span>
-                        <h2>{{ risk.next_steps }}</h2>
-                        <p>
-                            Take action based on the risk tier and review the original report with a qualified clinician.
-                        </p>
+                        <h2>Recommended follow-up</h2>
+                        <ul class="reason-list">
+                            {% for step in risk.next_steps %}
+                                <li>{{ step }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="product-section">
+                    <div class="section-heading">
+                        <span>Clinical Safety</span>
+                        <h2>Important Use Notice</h2>
+                    </div>
+                    <div class="notice-stack">
+                        <div class="notice-card">
+                            <strong>Diagnostic support only</strong>
+                            <p>MOKSHA estimates risk and highlights abnormal markers, but it does not diagnose disease.</p>
+                        </div>
+                        <div class="notice-card">
+                            <strong>Lab context matters</strong>
+                            <p>Reference intervals can vary by laboratory, patient profile, medications, hydration status, and pregnancy status.</p>
+                        </div>
+                        <div class="notice-card">
+                            <strong>Privacy-first handling</strong>
+                            <p>{{ risk.privacy_notice }}</p>
+                        </div>
                     </div>
                 </section>
 
                 <details class="ocr-debug">
-                    <summary>Debug Mode: OCR text used for extraction</summary>
+                    <summary>Debug Mode: Redacted OCR text used for extraction</summary>
                     <pre>{{ ocr_text }}</pre>
                 </details>
 
