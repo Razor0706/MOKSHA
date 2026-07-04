@@ -1,6 +1,6 @@
 # MOKSHA
 
-MOKSHA by Nexora Technologies is a Flask-based AI-assisted healthcare screening prototype for medical report interpretation. It combines OCR, biomarker extraction, rule-based clinical screening, and optional machine-learning support to produce explainable risk summaries while preserving medical ethics and privacy-by-design principles.
+MOKSHA is a Flask-based AI-assisted healthcare screening prototype for medical report interpretation. It combines OCR, biomarker extraction, rule-based clinical screening, and optional machine-learning support to produce explainable risk summaries while preserving medical ethics and privacy-by-design principles.
 
 MOKSHA is a diagnostic support tool only. It does not diagnose disease, replace a clinician, or override laboratory interpretation.
 
