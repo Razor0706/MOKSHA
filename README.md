@@ -206,6 +206,69 @@ The result page now includes:
 
 ## Installation
 
+## Prerequisites
+
+Before running MOKSHA locally, make sure you have:
+
+- Python 3.12 or 3.13
+- `pip`
+- Tesseract OCR installed separately on your system
+- Internet access the first time you run `train_model.py`, because the UCI dataset is fetched through `ucimlrepo`
+
+Important:
+
+- `requirements.txt` installs the Python wrapper `pytesseract`, but it does not install the Tesseract OCR engine itself.
+- Without Tesseract installed, the report-upload OCR workflow will not function.
+
+## Tesseract OCR setup
+
+Official Tesseract documentation:
+
+- Tesseract installation guide: [tessdoc Installation](https://tesseract-ocr.github.io/tessdoc/Installation.html)
+- Main Tesseract repository: [tesseract-ocr/tesseract](https://github.com/tesseract-ocr/tesseract)
+
+Windows setup:
+
+1. Install Tesseract OCR using the Windows installer referenced by the official Tesseract docs:
+   [Tesseract at UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki)
+2. Install it to the default path if possible:
+   `C:\Program Files\Tesseract-OCR\tesseract.exe`
+3. Optionally add `C:\Program Files\Tesseract-OCR` to your system `PATH`.
+4. Verify the installation from a new terminal:
+
+```powershell
+tesseract --version
+```
+
+If Tesseract is installed in a different location, set the environment variable before running the app:
+
+```powershell
+$env:TESSERACT_CMD="C:\Path\To\Tesseract-OCR\tesseract.exe"
+```
+
+Then start the app in the same terminal.
+
+macOS setup:
+
+- Install with Homebrew:
+
+```bash
+brew install tesseract
+```
+
+Linux setup:
+
+- On Ubuntu or Debian:
+
+```bash
+sudo apt install tesseract-ocr
+```
+
+Language data note:
+
+- The app primarily expects English-language lab reports.
+- If you need additional OCR languages, install the corresponding Tesseract language data supported by your platform.
+
 Base dependencies:
 
 ```bash
@@ -248,11 +311,46 @@ Optional dependency file:
 
 ## Running the app
 
+Recommended local setup order:
+
+```bash
+pip install -r requirements.txt
+pip install -r requirements-optional.txt
+python train_model.py
+python app.py
+```
+
+If you do not want optional packages, you can skip the second command.
+
+Windows users who installed Tesseract in a non-default location should set:
+
+```powershell
+$env:TESSERACT_CMD="C:\Path\To\Tesseract-OCR\tesseract.exe"
+```
+
+before running `python app.py`.
+
 ```bash
 python app.py
 ```
 
 Then open the Flask URL shown in the console and upload a supported image report.
+
+## Troubleshooting
+
+Common local setup issues:
+
+- `ModuleNotFoundError: No module named 'pandas'`
+  Install core dependencies with `pip install -r requirements.txt`
+
+- `tesseract is not recognized` or OCR does not work
+  Install Tesseract separately and verify with `tesseract --version`
+
+- Tesseract is installed but the app still cannot find it
+  Set `TESSERACT_CMD` to the full `tesseract.exe` path before starting the app
+
+- `train_model.py` fails on first run
+  Check internet access because the dataset download happens at training time
 
 ## Model evaluation
 

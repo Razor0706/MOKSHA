@@ -11,12 +11,13 @@ MODELS_DIR = BASE_DIR / "models"
 TRAINED_MODEL_PATH = MODELS_DIR / "cardiometabolic_risk_bundle.joblib"
 TRAINING_REPORT_PATH = MODELS_DIR / "training_report.json"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
-TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+DEFAULT_TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 
 def configure_ocr_engine():
-    if os.path.exists(TESSERACT_PATH):
-        pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+    configured_path = os.getenv("TESSERACT_CMD", DEFAULT_TESSERACT_PATH)
+    if os.path.exists(configured_path):
+        pytesseract.pytesseract.tesseract_cmd = configured_path
 
 
 def configure_upload_folder(app):
