@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+
+uploads/*
+!uploads/.gitkeep
+
+models/*.joblib
+models/*.json
+
+datasets/raw/*.csv
+datasets/processed/*.csv
+
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
