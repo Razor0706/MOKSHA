@@ -4,7 +4,10 @@ import pytesseract
 
 
 def _resize_image(image):
-    return cv2.resize(image, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+    h, w = image.shape[:2]
+    if w < 1000:
+        return cv2.resize(image, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
+    return image
 
 
 def _to_grayscale(image):
@@ -12,12 +15,12 @@ def _to_grayscale(image):
 
 
 def _apply_clahe(gray_image):
-    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     return clahe.apply(gray_image)
 
 
 def _denoise(gray_image):
-    return cv2.fastNlMeansDenoising(gray_image, None, 15, 7, 21)
+    return cv2.GaussianBlur(gray_image, (3, 3), 0)
 
 
 def _adaptive_threshold(gray_image):
@@ -42,6 +45,9 @@ def _deskew(binary_image):
     else:
         angle = -angle
 
+    if abs(angle) > 45 or abs(angle) < 0.5:
+        return binary_image
+
     height, width = binary_image.shape[:2]
     center = (width // 2, height // 2)
     matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
@@ -62,11 +68,14 @@ def extract_text(filepath):
     contrast = _apply_clahe(gray)
     denoised = _denoise(contrast)
     thresholded = _adaptive_threshold(denoised)
-    deskewed = _deskew(thresholded)
 
-    variants = [deskewed, thresholded, contrast]
-    texts = [pytesseract.image_to_string(variant, config="--psm 6") for variant in variants]
-    text = max(texts, key=_score_ocr_text)
+    text = pytesseract.image_to_string(thresholded, config="--psm 6")
+
+    if len(text.strip()) < 20:
+        deskewed = _deskew(thresholded)
+        alt_text = pytesseract.image_to_string(deskewed, config="--psm 6")
+        if _score_ocr_text(alt_text) > _score_ocr_text(text):
+            text = alt_text
 
     print("\n========== OCR TEXT FOR DEBUGGING ==========")
     print(text)

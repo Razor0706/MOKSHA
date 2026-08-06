@@ -30,10 +30,16 @@ def _build_next_steps(final_risk, conditions):
     else:
         next_steps.append("Continue routine preventive care and periodic health screening.")
 
-    if "Kidney Function Concern" in conditions:
-        next_steps.append("Discuss kidney-related markers, hydration status, and medication history with a clinician.")
-    if "Possible Anemia" in conditions:
-        next_steps.append("Consider a complete blood count or iron workup if symptoms or low hemoglobin persist.")
+    if "Kidney Function Concern" in conditions or "Renal Clearance Warning" in conditions:
+        next_steps.append("Discuss kidney-related markers, hydration status, and medication history with a nephrologist or PCP.")
+    if "Possible Anemia" in conditions or "Leukocytosis (Infection Warning)" in conditions:
+        next_steps.append("Consider a complete blood count repeat or hematology workup if symptoms persist.")
+    if "Hepatic Stress / Enzyme Elevation" in conditions:
+        next_steps.append("Discuss liver transaminases, dietary habits, and medication history with a gastroenterologist.")
+    if "Thyroid Dysfunction" in conditions:
+        next_steps.append("Evaluate thyroid hormone levels (TSH, FT3, FT4) with an endocrinologist.")
+    if "Vitamin D / B12 Deficiency" in conditions:
+        next_steps.append("Review nutritional supplementation or dietary adjustments with your physician.")
     return next_steps
 
 
@@ -61,7 +67,7 @@ def predict_risk(values):
             "conditions": ["Insufficient Data"],
         }
 
-    reasons = abnormal_factor_summaries(assessments, limit=5)
+    reasons = abnormal_factor_summaries(assessments, limit=6)
     ml_risk = ml_result["level"]
     final_risk = strongest_risk(clinical_risk, ml_risk if ml_risk != "unknown" else "low")
 
@@ -70,7 +76,7 @@ def predict_risk(values):
 
     top_factors = list(ml_result.get("top_factors") or [])
     if not top_factors:
-        top_factors = abnormal_factor_summaries(assessments, limit=3)
+        top_factors = abnormal_factor_summaries(assessments, limit=4)
 
     if final_risk == "low" and not reasons:
         reasons.append("Detected markers are within low-risk screening ranges for this support tool.")
@@ -104,20 +110,48 @@ def predict_risk(values):
 def detect_conditions(values, assessments, overall_risk, ml_risk):
     conditions = []
 
+    # Glycemic
     glucose_assessment = assessments["fasting_glucose"]["severity"]
     hba1c_assessment = assessments["hba1c"]["severity"]
     if glucose_assessment in {"moderate", "high"} or hba1c_assessment in {"moderate", "high"}:
         conditions.append("Diabetes Risk")
 
+    # Lipid & Cardiovascular
     lipid_keys = ("total_cholesterol", "ldl", "hdl", "triglycerides")
     if any(assessments[key]["severity"] in {"moderate", "high"} for key in lipid_keys) or assessments["blood_pressure"]["severity"] in {"moderate", "high"}:
         conditions.append("Cardiovascular Risk")
 
-    if assessments["creatinine"]["severity"] in {"moderate", "high"}:
+    # Kidney
+    kidney_keys = ("creatinine", "urea", "uric_acid", "egfr", "sodium", "potassium")
+    if any(assessments[key]["severity"] in {"moderate", "high"} for key in kidney_keys):
         conditions.append("Kidney Function Concern")
 
+    # Liver
+    liver_keys = ("alt", "ast", "alp", "total_bilirubin", "direct_bilirubin", "albumin", "total_protein")
+    if any(assessments[key]["severity"] in {"moderate", "high"} for key in liver_keys):
+        conditions.append("Hepatic Stress / Enzyme Elevation")
+
+    # Hematology
     if assessments["hemoglobin"]["severity"] in {"moderate", "high"}:
         conditions.append("Possible Anemia")
+    if assessments["wbc"]["severity"] in {"moderate", "high"}:
+        conditions.append("Leukocytosis (Infection Warning)")
+    if assessments["platelets"]["severity"] in {"moderate", "high"}:
+        conditions.append("Thrombocyte Imbalance")
+
+    # Thyroid
+    thyroid_keys = ("tsh", "free_t3", "free_t4")
+    if any(assessments[key]["severity"] in {"moderate", "high"} for key in thyroid_keys):
+        conditions.append("Thyroid Dysfunction")
+
+    # Vitamins
+    vitamin_keys = ("vitamin_d", "vitamin_b12", "calcium", "iron", "ferritin")
+    if any(assessments[key]["severity"] in {"moderate", "high"} for key in vitamin_keys):
+        conditions.append("Vitamin / Deficiency Caution")
+
+    # Inflammatory
+    if assessments["hscrp"]["severity"] in {"moderate", "high"}:
+        conditions.append("Systemic Inflammation Warning")
 
     if not conditions and ml_risk in {"moderate", "high"}:
         conditions.append("Cardiovascular Risk")
@@ -139,15 +173,24 @@ def recommend_specialist(condition):
     specialists = []
     if "Diabetes" in condition:
         specialists.append("Endocrinologist")
-    if "Cardiovascular" in condition:
+    if "Cardiovascular" in condition or "Systemic Inflammation" in condition:
         specialists.append("Cardiologist")
     if "Kidney" in condition:
         specialists.append("Nephrologist")
-    if "Anemia" in condition:
+    if "Hepatic" in condition:
+        specialists.append("Gastroenterologist / Hepatologist")
+    if "Thyroid" in condition:
+        specialists.append("Endocrinologist")
+    if "Anemia" in condition or "Leukocytosis" in condition or "Thrombocyte" in condition:
         specialists.append("Hematologist")
+    if "Vitamin" in condition:
+        specialists.append("General Physician / Nutritionist")
 
-    if specialists:
-        return " + ".join(specialists)
+    # Deduplicate while preserving order
+    unique_specialists = list(dict.fromkeys(specialists))
+
+    if unique_specialists:
+        return " + ".join(unique_specialists)
     if condition == "Insufficient Data":
         return "Medical Professional"
     return "Routine Physician Follow-up"
