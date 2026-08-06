@@ -1,162 +1,85 @@
-import os
 import tempfile
 from pathlib import Path
 import streamlit as st
+import streamlit.components.v1 as components
+from flask import render_template
 
-from medical_report_app.config import configure_ocr_engine
+from medical_report_app import create_app
+from medical_report_app.config import BASE_DIR
 from medical_report_app.services.report_analysis import analyze_report
 
-# Configure OCR engine path if set in environment
-configure_ocr_engine()
+# Initialize Flask App for template rendering
+flask_app = create_app()
 
 st.set_page_config(
-    page_title="MOKSHA - Diagnostic Support Prototype",
+    page_title="MOKSHA - AI Diagnostic Support System",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
-# Custom Styling for modern UI aesthetics
+# Load original static CSS file
+css_path = BASE_DIR / "static" / "style.css"
+css_content = css_path.read_text(encoding="utf-8") if css_path.exists() else ""
+
+# Inject global CSS into Streamlit
 st.markdown(
-    """
+    f"""
     <style>
-    .main-header {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #0f172a;
-        margin-bottom: 0.2rem;
-    }
-    .sub-header {
-        font-size: 1.05rem;
-        color: #475569;
-        margin-bottom: 1.5rem;
-    }
-    .metric-box {
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    .risk-high {
-        color: #dc2626;
-        font-weight: bold;
-    }
-    .risk-moderate {
-        color: #d97706;
-        font-weight: bold;
-    }
-    .risk-low {
-        color: #16a34a;
-        font-weight: bold;
-    }
+    {css_content}
+    .stApp {{
+        background-color: #0b0f19;
+    }}
+    .block-container {{
+        padding: 1rem 1rem !important;
+        max-width: 100% !important;
+    }}
+    iframe {{
+        border: none !important;
+        width: 100% !important;
+    }}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-st.markdown('<div class="main-header">🏥 MOKSHA</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="sub-header">AI-Assisted Medical Report Screening & Explainable Risk Summary</div>',
-    unsafe_allow_html=True,
-)
-
+# Sidebar File Uploader
 with st.sidebar:
-    st.header("About MOKSHA")
-    st.info(
-        "**MOKSHA** by Nexora Technologies is an AI-assisted diagnostic support prototype for medical report interpretation. "
-        "It combines OCR, biomarker extraction, clinical rules, and machine learning to produce explainable risk summaries."
+    st.title("🏥 MOKSHA")
+    st.markdown("### Upload Medical Report")
+    uploaded_file = st.file_uploader(
+        "Choose an image file",
+        type=["png", "jpg", "jpeg"],
+        help="Supports PNG, JPG, JPEG report images",
     )
-    st.warning(
-        "⚠️ **Diagnostic Support Only**: MOKSHA does not diagnose diseases, replace clinicians, "
-        "or override laboratory interpretations."
-    )
-    st.markdown("---")
-    st.markdown("**Supported Report Formats:** PNG, JPG, JPEG")
 
-uploaded_file = st.file_uploader(
-    "Upload a clear lab report image to analyze",
-    type=["png", "jpg", "jpeg"],
-    help="Upload an image of a medical laboratory report.",
-)
+# Main Content Area
+if uploaded_file is None:
+    # Render the exact original landing page (templates/index.html)
+    with flask_app.app_context():
+        try:
+            rendered_html = render_template("index.html")
+            full_html = f"<html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
+            components.html(full_html, height=850, scrolling=True)
+        except Exception:
+            st.info("👈 Please upload a medical report image from the sidebar to begin analysis.")
 
-if uploaded_file is not None:
-    st.image(uploaded_file, caption="Uploaded Medical Report Image", use_container_width=True)
-    
-    if st.button("🚀 Analyze Report", type="primary"):
-        with st.spinner("Processing image, running OCR, and executing clinical screening..."):
-            # Save uploaded file to temporary path
-            file_suffix = Path(uploaded_file.name).suffix
-            with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
-                temp_file.write(uploaded_file.getvalue())
-                temp_path = Path(temp_file.name)
+else:
+    # Save file temporarily and run analysis
+    file_suffix = Path(uploaded_file.name).suffix
+    with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
+        temp_file.write(uploaded_file.getvalue())
+        temp_path = Path(temp_file.name)
 
-            try:
-                result = analyze_report(temp_path)
-                
-                st.success("Analysis Complete!")
-                st.markdown("---")
-
-                # Key Diagnostics Overview
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric("Report Type", result.get("report_type", "Standard Report"))
-                
-                risk = result.get("risk", {})
-                risk_level = risk.get("level", "N/A").capitalize()
-                confidence = risk.get("confidence")
-                conf_str = f" ({confidence}% confidence)" if confidence else ""
-                
-                with col2:
-                    st.metric("Risk Level", f"{risk_level}{conf_str}")
-
-                with col3:
-                    st.metric("Condition Detected", result.get("condition", "N/A"))
-
-                with col4:
-                    st.metric("Recommended Specialist", result.get("specialist", "General Physician"))
-
-                st.markdown("---")
-
-                # AI Explainability & Clinical Reasoning
-                col_left, col_right = st.columns(2)
-                
-                with col_left:
-                    st.subheader("📊 AI Support Details")
-                    st.write(f"**Top Contributing Factors:** {', '.join(risk.get('top_factors', [])) if risk.get('top_factors') else 'Clinical review required'}")
-                    st.write(f"**Model Support:** {risk.get('model_name', 'Rule Engine')}")
-                    st.write(f"**Clinical Rationale:** {risk.get('explanation', '')}")
-
-                with col_right:
-                    st.subheader("🛡️ Privacy & Compliance Notice")
-                    st.write(result.get("privacy_notice", ""))
-
-                st.markdown("---")
-
-                # Extracted Biomarker Summary Table
-                st.subheader("🧪 Extracted Biomarker Summary")
-                value_rows = result.get("value_rows", [])
-                
-                if value_rows:
-                    table_data = []
-                    for row in value_rows:
-                        val_str = f"{row['value']}" if row['value'] is not None else "Not Detected"
-                        table_data.append({
-                            "Biomarker": row["label"],
-                            "Extracted Value": val_str,
-                            "Unit": row["unit"],
-                            "Normal Reference Range": row["normal_range"],
-                            "Status": row["status"],
-                            "Interpretation": row["interpretation"],
-                        })
-                    st.table(table_data)
-                else:
-                    st.warning("No structured biomarkers could be extracted from this image.")
-
-                # OCR Debug Output (Redacted)
-                with st.expander("🔍 View Redacted OCR Raw Text"):
-                    st.text(result.get("ocr_text", ""))
-
-            except Exception as e:
-                st.error(f"Analysis Error: {str(e)}")
+    with st.spinner("Analyzing report..."):
+        try:
+            result = analyze_report(temp_path)
+            with flask_app.app_context():
+                rendered_html = render_template("result.html", **result)
+                full_html = f"<html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
+                components.html(full_html, height=1500, scrolling=True)
+        except Exception as err:
+            with flask_app.app_context():
+                rendered_html = render_template("result.html", error=str(err))
+                full_html = f"<html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
+                components.html(full_html, height=600, scrolling=True)
