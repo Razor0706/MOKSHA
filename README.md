@@ -1,32 +1,44 @@
 # MOKSHA
 
-MOKSHA by Nexora Technologies is a Flask-based AI-assisted healthcare screening prototype for medical report interpretation. It combines OCR, biomarker extraction, rule-based clinical screening, and optional machine-learning support to produce explainable risk summaries while preserving medical ethics and privacy-by-design principles.
+MOKSHA by Nexora Technologies is an AI-assisted healthcare screening prototype for multi-domain medical report interpretation. Built with Flask and Streamlit, it combines OCR, biomarker extraction across 35+ clinical parameters, rule-based screening engines, and multi-dataset machine-learning models to produce explainable, privacy-first risk summaries.
 
 MOKSHA is a diagnostic support tool only. It does not diagnose disease, replace a clinician, or override laboratory interpretation.
 
 ## Core capabilities
 
-- OCR-driven extraction from uploaded report images
-- Expanded biomarker support for fasting glucose, HbA1c, total cholesterol, LDL, HDL, triglycerides, blood pressure, creatinine, and hemoglobin
-- Rule engine informed by common CDC, WHO, and cardiometabolic screening ranges
-- Production-style training pipeline for a UCI-backed cardiometabolic screening model
-- Explainable risk summaries with confidence, top factors, and next-step guidance
-- Ephemeral upload handling with immediate file deletion after analysis
+- **Multi-Domain Report Parsing**: OCR-driven extraction supporting 35+ biomarkers across 9 major clinical domains (Glycemic, Lipid, Kidney/Renal, Liver/LFT, CBC/Hematology, Thyroid, Vitamins & Minerals, Inflammation, Vitals).
+- **Smart Row Filtering**: Dynamically hides non-detected parameters to render clean, context-specific laboratory result tables.
+- **Minimum Detection Threshold**: Enforces validation (`MIN_BIOMARKER_THRESHOLD`) to ensure adequate data before running risk analysis.
+- **Multi-Dataset ML Infrastructure**: Automated fetching, PII sanitization, and model training across multiple UCI datasets (Heart Disease, Diabetes, Indian Liver Patient Dataset).
+- **Rule Engine & Multi-Specialist Referrals**: Expanded clinical rules mapping findings to relevant condition warnings and chaining specialist recommendations (Endocrinologist, Nephrologist, Hepatologist, Hematologist, Cardiologist, etc.).
+- **Dual Web Architecture**: Native Flask web application alongside a Streamlit cloud wrapper (`streamlit_app.py`) for 1-click free deployment.
+- **Privacy-by-Design**: Ephemeral upload handling with immediate temporary file deletion and automatic PII redaction.
 
 ## Architecture
 
-The project keeps the existing Flask app structure and extends it with modular services and training assets.
+The project keeps a modular Flask and Streamlit architecture extended with clinical interpretation services and multi-dataset training pipelines.
 
 ```text
 MOKSHA/
 |-- app.py
+|-- streamlit_app.py
 |-- train_model.py
+|-- packages.txt
+|-- Dockerfile
 |-- datasets/
 |   |-- raw/
+|   |   |-- heart_disease_raw.csv
+|   |   |-- diabetes_raw.csv
+|   |   `-- liver_raw.csv
 |   |-- processed/
+|   |   |-- heart_disease_training.csv
+|   |   |-- diabetes_training.csv
+|   |   `-- liver_training.csv
 |   |-- README.md
 |   `-- source_catalog.json
 |-- models/
+|   |-- cardiometabolic_risk_bundle.joblib
+|   `-- training_report.json
 |-- training/
 |   |-- dataset_loader.py
 |   |-- preprocessing.py
@@ -42,7 +54,8 @@ MOKSHA/
 |   |   |-- presentation.py
 |   |   |-- report_analysis.py
 |   |   |-- report_parser.py
-|   |   `-- risk.py
+|   |   |-- risk.py
+|   |   `-- text_processing.py
 |   `-- utils/
 |       |-- files.py
 |       `-- privacy.py
@@ -50,268 +63,154 @@ MOKSHA/
 `-- static/
 ```
 
-## Dataset
+## Datasets
 
-Primary training dataset:
+MOKSHA leverages public, peer-reviewed healthcare datasets from the UCI Machine Learning Repository for training and evaluating clinical risk support models:
 
-- UCI Machine Learning Repository, Heart Disease
-- URL: https://archive.ics.uci.edu/dataset/45/heart+disease
-- DOI: 10.24432/C52P4X
-- License: CC BY 4.0
+1. **UCI Heart Disease Dataset (ID: 45)**
+   - URL: https://archive.ics.uci.edu/dataset/45/heart+disease
+   - DOI: 10.24432/C52P4X | License: CC BY 4.0
+   - Primary dataset for cardiovascular and cardiometabolic risk classification.
 
-Why this dataset was selected:
+2. **UCI Diabetes Dataset (ID: 89)**
+   - URL: https://archive.ics.uci.edu/dataset/89/diabetes
+   - License: CC BY 4.0
+   - Multi-feature dataset for diabetes screening and glycemic risk estimation.
 
-- It is a legitimate public healthcare dataset from the preferred source hierarchy.
-- It supports a classification task aligned with cardiovascular screening support.
-- It includes medically relevant attributes such as age, sex, resting blood pressure, cholesterol, and fasting blood sugar flags.
-- It includes historical identifier-like columns in the broader schema, which makes it useful for demonstrating privacy removal logic.
+3. **UCI Indian Liver Patient Dataset / ILPD (ID: 225)**
+   - URL: https://archive.ics.uci.edu/dataset/225/ilpd+indian+liver+patient+dataset
+   - License: CC BY 4.0
+   - Used for hepatic risk screening, transaminase (ALT/AST), ALP, and bilirubin analysis.
 
-Dataset handling workflow:
+### Dataset Handling Workflow
 
-1. `train_model.py` fetches the dataset through `ucimlrepo`.
-2. Any column that looks like PII is dropped automatically before preprocessing.
-3. Sanitized caches are written to `datasets/raw/` and `datasets/processed/`.
-4. The final model bundle and training report are saved under `models/`.
+1. `train_model.py` fetches raw datasets via `ucimlrepo`.
+2. Any column matching PII (patient ID, identifiers) is automatically dropped via `drop_pii_columns` prior to feature curation.
+3. Raw and processed datasets are cached locally under `datasets/raw/` and `datasets/processed/`.
+4. Model artifacts and multi-model evaluation reports are compiled under `models/`.
 
-## Privacy policy
+## Privacy Policy
 
 MOKSHA is designed with privacy-first defaults:
 
-- Uploaded report images are never kept permanently for inference.
-- The uploaded file is deleted immediately after OCR and analysis complete, even when an error occurs.
-- OCR debug output is redacted before rendering to the browser.
-- Training pipelines remove PII-like columns automatically before preprocessing.
-- The application is designed to retain only medically useful extracted markers if persistence is ever introduced later.
+- **Zero Permanent File Storage**: Uploaded report images are deleted immediately after OCR and analysis complete, even when an error occurs.
+- **OCR PII Redaction**: Debug OCR text displayed during local testing is stripped of patient identifiers before browser rendering.
+- **Automated Pipeline PII Removal**: Training pipelines automatically strip personal identifiers before dataset caching and preprocessing.
 
-Examples of identifiers explicitly excluded from training and persistence:
+Identifiers explicitly excluded:
+- Name, Address, Phone number, Email
+- Patient ID, Hospital ID, Report number
+- Aadhaar / SSN / Barcodes / Signatures
 
-- Name
-- Address
-- Phone number
-- Email
-- Hospital ID
-- Patient ID
-- Aadhaar or Aadhar
-- Social Security Number
-- Report number
-- Barcode
-- Signature
+## Training Process
 
-## Training process
-
-Run the model training pipeline with:
+Run the multi-dataset training pipeline with:
 
 ```bash
 python train_model.py
 ```
 
 The training pipeline:
-
-- Loads the UCI Heart Disease dataset
-- Removes PII-like columns automatically
-- Curates medically relevant features
-- Cleans missing values with imputation
-- Normalizes numerical features
-- Encodes categorical features
-- Splits train and test sets
-- Trains multiple candidate models
-- Evaluates accuracy, precision, recall, F1, and ROC AUC
-- Selects the best-performing model automatically
-- Saves the final bundle with `joblib`
+- Fetches and caches UCI Heart Disease, Diabetes, and Liver datasets
+- Strips PII automatically across all data streams
+- Curates features, handles missing values via imputation, and normalizes numeric inputs
+- Encodes categorical variables and splits training/testing partitions
+- Trains candidate classifiers: Logistic Regression, Random Forest, Gradient Boosting, and XGBoost (if installed)
+- Evaluates metrics: Accuracy, Precision, Recall, F1 Score, ROC AUC
+- Automatically selects the optimal model bundle and exports `models/cardiometabolic_risk_bundle.joblib` and `models/training_report.json`
 
 Candidate models:
-
 - Logistic Regression
 - Random Forest
 - Gradient Boosting
-- XGBoost, only when the package is installed
+- XGBoost (when package is present)
 
 Saved artifacts:
-
 - `models/cardiometabolic_risk_bundle.joblib`
 - `models/training_report.json`
 
-## Explainability
+## Supported Biomarkers & Clinical Panels
 
-At inference time, MOKSHA returns:
+MOKSHA parses and interprets 35+ parameters across 9 distinct medical domains:
 
-- Risk level
-- Confidence score
-- Top contributing factors
-- Clinical rationale
-- Follow-up suggestions
+1. **Glycemic Profile**: Fasting Glucose, HbA1c
+2. **Lipid Profile**: Total Cholesterol, LDL, HDL, Triglycerides
+3. **Vitals**: Blood Pressure (Systolic & Diastolic)
+4. **Kidney / Renal Function (RFT)**: Serum Creatinine, Urea, Uric Acid, eGFR, Sodium (Na+), Potassium (K+)
+5. **Liver Function Test (LFT)**: ALT (SGPT), AST (SGOT), Alkaline Phosphatase (ALP), Total Bilirubin, Direct Bilirubin, Albumin, Total Protein
+6. **Complete Blood Count (CBC) / Hematology**: Hemoglobin, Total Leukocyte Count (WBC), Platelet Count, RBC Count, Hematocrit (PCV), ESR
+7. **Thyroid Profile**: TSH, Free T3, Free T4
+8. **Vitamins & Minerals**: Vitamin D (25-OH), Vitamin B12, Serum Calcium, Serum Iron, Serum Ferritin
+9. **Inflammatory Profile**: High-Sensitivity C-Reactive Protein (hs-CRP)
 
-Explainability strategy:
-
-- If a trained model bundle is available, the app uses it for cardiometabolic support.
-- If SHAP is installed and compatible with the saved model, SHAP-based factor ranking is attempted.
-- If SHAP is unavailable, the app falls back to clinically grounded factor explanations.
-- If no trained model bundle is present, the app falls back to heuristic clinical scoring rather than failing.
-
-## OCR and extraction pipeline
+## OCR and Extraction Pipeline
 
 OCR preprocessing includes:
-
-- Resize
-- Grayscale conversion
+- Resize & Grayscale conversion
 - CLAHE contrast enhancement
-- Noise removal
-- Adaptive thresholding
-- Deskew
-- Tesseract OCR
+- Noise removal & Adaptive thresholding
+- Deskew & Tesseract OCR engine extraction
 
-Value extraction includes fuzzy matching and report-context scoring for:
+Value extraction features:
+- Regex pattern matching combined with fuzzy text matching and domain context scoring (`_has_relevant_context`)
+- **Minimum Detection Threshold**: Requires at least 1 valid detected biomarker (`MIN_BIOMARKER_THRESHOLD`) to prevent invalid or speculative analysis
+- **Smart Filtering**: Non-detected biomarkers are omitted from UI result tables to display clean, concise lab summaries
 
-- Fasting glucose
-- HbA1c
-- Total cholesterol
-- LDL
-- HDL
-- Triglycerides
-- Blood pressure
-- Creatinine
-- Hemoglobin
+## Clinical Engine & Explainability
 
-## Clinical engine
+- **Multi-domain condition detection**: Diabetes Risk, Cardiovascular Risk, Kidney Function Concern, Hepatic Stress / Enzyme Elevation, Possible Anemia, Leukocytosis, Thrombocyte Imbalance, Thyroid Dysfunction, Vitamin / Deficiency Caution, Systemic Inflammation Warning.
+- **Referral Chaining**: Recommends specialized medical follow-ups (Endocrinologist, Nephrologist, Gastroenterologist / Hepatologist, Hematologist, Cardiologist, General Physician).
+- **Explainable Risk Scoring**: Combines ML risk classification (SHAP / heuristic feature ranking) with evidence-based clinical screening rules.
 
-The existing rule-based engine has been preserved and expanded. It complements the ML layer rather than replacing it.
+## Result Dashboard
 
-Examples of supported interpretation logic:
-
-- Fasting glucose and HbA1c screening ranges
-- Cholesterol and lipid profile interpretation
-- Blood pressure stratification
-- Creatinine reference-range cautioning
-- Hemoglobin and possible anemia screening
-
-Important note:
-
-- Clinical thresholds in MOKSHA are for screening support and should always be interpreted alongside the original laboratory reference interval and clinician judgment.
-
-## Result dashboard
-
-The result page now includes:
-
-- Risk badge
-- Confidence percentage
-- Detected condition summary
-- Recommended specialist
-- Parameter interpretation
-- Normal ranges
-- Abnormal highlighting
-- Explainable factors
-- Clinical explanation
-- Next steps
-- Privacy notice
+The result UI includes:
+- Risk Severity Badge & Confidence Level
+- Identified Clinical Condition Summaries
+- Recommended Specialist Referral(s)
+- Clean Biomarker Table (showing only detected values with reference ranges & status flags)
+- Explainable Risk Factor Breakdown & Next Steps
+- Privacy & Ephemeral Data Notice
 
 ## Installation
 
-## Prerequisites
-
-Before running MOKSHA locally, make sure you have:
+### Prerequisites
 
 - Python 3.12 or 3.13
 - `pip`
 - Tesseract OCR installed separately on your system
-- Internet access the first time you run `train_model.py`, because the UCI dataset is fetched through `ucimlrepo`
+- Internet access on first run to fetch UCI datasets via `ucimlrepo`
 
-Important:
-
-- `requirements.txt` installs the Python wrapper `pytesseract`, but it does not install the Tesseract OCR engine itself.
-- Without Tesseract installed, the report-upload OCR workflow will not function.
-
-## Tesseract OCR setup
-
-Official Tesseract documentation:
-
-- Tesseract installation guide: [tessdoc Installation](https://tesseract-ocr.github.io/tessdoc/Installation.html)
-- Main Tesseract repository: [tesseract-ocr/tesseract](https://github.com/tesseract-ocr/tesseract)
+### Tesseract OCR Setup
 
 Windows setup:
-
-1. Install Tesseract OCR using the Windows installer referenced by the official Tesseract docs:
-   [Tesseract at UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki)
-2. Install it to the default path if possible:
-   `C:\Program Files\Tesseract-OCR\tesseract.exe`
-3. Optionally add `C:\Program Files\Tesseract-OCR` to your system `PATH`.
-4. Verify the installation from a new terminal:
-
-```powershell
-tesseract --version
-```
-
-If Tesseract is installed in a different location, set the environment variable before running the app:
-
-```powershell
-$env:TESSERACT_CMD="C:\Path\To\Tesseract-OCR\tesseract.exe"
-```
-
-Then start the app in the same terminal.
+1. Install Tesseract OCR using the Windows installer: [Tesseract at UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki)
+2. Default path: `C:\Program Files\Tesseract-OCR\tesseract.exe`
+3. Verify installation:
+   ```powershell
+   tesseract --version
+   ```
 
 macOS setup:
-
-- Install with Homebrew:
-
 ```bash
 brew install tesseract
 ```
 
 Linux setup:
-
-- On Ubuntu or Debian:
-
 ```bash
 sudo apt install tesseract-ocr
 ```
 
-Language data note:
-
-- The app primarily expects English-language lab reports.
-- If you need additional OCR languages, install the corresponding Tesseract language data supported by your platform.
-
-Base dependencies:
+### Dependencies
 
 ```bash
 pip install -r requirements.txt
-```
-
-Optional enhancements:
-
-- Install optional ML and explainability packages separately with:
-
-```bash
 pip install -r requirements-optional.txt
 ```
 
-- `xgboost` for additional model comparison
-- `shap` for model explainability
+## Running the App
 
-## Requirements
-
-Current required packages:
-
-- Flask
-- pytesseract
-- opencv-python
-- numpy
-- scikit-learn
-- Werkzeug
-- pandas
-- joblib
-- ucimlrepo
-
-Optional packages:
-
-- xgboost
-- shap
-
-Optional dependency file:
-
-- `requirements-optional.txt` for advanced model training and explainability extras
-
-## Running the app
-
-Recommended local setup order:
+### Recommended Local Flask Setup
 
 ```bash
 pip install -r requirements.txt
@@ -320,29 +219,19 @@ python train_model.py
 python app.py
 ```
 
-If you do not want optional packages, you can skip the second command.
+Open the local Flask URL printed in your console.
 
-Windows users who installed Tesseract in a non-default location should set:
+### Running with Streamlit
 
-```powershell
-$env:TESSERACT_CMD="C:\Path\To\Tesseract-OCR\tesseract.exe"
-```
-
-before running `python app.py`.
+To run MOKSHA using the Streamlit interface:
 
 ```bash
-python app.py
+streamlit run streamlit_app.py
 ```
-
-Then open the Flask URL shown in the console and upload a supported image report.
 
 ## Deployment
 
-MOKSHA can be deployed as an educational portfolio demo using Docker and Render.
-
-The included `Dockerfile` installs the Linux Tesseract OCR engine, Python dependencies, and Gunicorn. It also runs the service as a non-root user. The deployment image does not contain local uploads, trained model artifacts, or downloaded dataset caches.
-
-Streamlit Community Cloud setup (Recommended - 100% Free Forever):
+### Streamlit Community Cloud (Recommended - 100% Free Forever)
 
 1. Push your repository to GitHub.
 2. Log in to [Streamlit Community Cloud](https://share.streamlit.io/).
@@ -352,92 +241,28 @@ Streamlit Community Cloud setup (Recommended - 100% Free Forever):
 
 *(Note: `packages.txt` automatically installs `tesseract-ocr` system dependencies on Streamlit Cloud).*
 
-Render setup:
+### Render Docker Setup
 
-1. Push the deployment branch to GitHub and create a Render **Web Service** from that branch.
-2. Select the **Docker** runtime. Render detects the included `Dockerfile` automatically.
+1. Push the deployment branch to GitHub and create a Render **Web Service**.
+2. Select **Docker** runtime.
 3. Set `TESSERACT_CMD` to `/usr/bin/tesseract`.
-4. Set a long random `SECRET_KEY` value in Render's environment variables.
-5. Optionally set `MAX_UPLOAD_MB` (default: `5`).
-6. Configure Render's health-check path as `/health`.
+4. Set `SECRET_KEY` in environment variables.
+5. Set health-check path as `/health`.
 
-The live demo must prominently state that it is an educational diagnostic-support prototype, not a diagnosis or treatment system. Do not use real patient reports on a public deployment.
+## Model Evaluation
 
-Branch workflow:
+Training writes evaluation output to `models/training_report.json`, including accuracy, precision, recall, F1 score, and ROC AUC metrics across all trained model candidates.
 
-- Keep the public production deployment connected to `main`.
-- Develop and test changes on feature branches such as `deployment-ready`.
-- Use a Render preview service for the development branch when you want to test it online.
-- Merge tested changes into `main` only when the production deployment is ready to update.
+## Security & Privacy Notes
 
-## Troubleshooting
-
-Common local setup issues:
-
-- `ModuleNotFoundError: No module named 'pandas'`
-  Install core dependencies with `pip install -r requirements.txt`
-
-- `tesseract is not recognized` or OCR does not work
-  Install Tesseract separately and verify with `tesseract --version`
-
-- Tesseract is installed but the app still cannot find it
-  Set `TESSERACT_CMD` to the full `tesseract.exe` path before starting the app
-
-- `train_model.py` fails on first run
-  Check internet access because the dataset download happens at training time
-
-## Model evaluation
-
-Training writes structured evaluation output to `models/training_report.json`.
-
-The evaluation report includes:
-
-- Selected model
-- Accuracy
-- Precision
-- Recall
-- F1 score
-- ROC AUC
-- Comparison across all trained candidate models
-
-This separation keeps model governance auditable and makes future retraining easier.
-
-## Security notes
-
-- Reports are handled as transient files only.
-- Uploaded filenames are replaced with generated identifiers before temporary storage.
-- PII redaction is applied to OCR text shown in debug mode.
-- The training pipeline is privacy-aware by default.
-
-## Production-readiness notes
-
-This repository is a strong prototype foundation, not a regulated medical device.
-
-Before real-world deployment, add:
-
-- Human validation workflows
-- Dataset version pinning and reproducible model registries
-- Access control and encryption at rest
-- Full audit logging
-- Bias and subgroup performance checks
-- Clinical safety review
-- Monitoring for OCR drift and model drift
-- Input validation for PDFs and larger file types
-- Containerization and CI/CD with security scanning
+- Temporary report files are deleted immediately after analysis.
+- PII redaction is automatically applied to OCR text.
+- PII columns are automatically excluded during dataset training.
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the `LICENSE` file for details.
+Licensed under the Apache License 2.0. See `LICENSE` for details.
 
-## Medical ethics statement
+## Medical Ethics Statement
 
-MOKSHA is intentionally designed as a support system, not a diagnosis engine.
-
-Its purpose is to:
-
-- Highlight potentially important findings
-- Improve report readability
-- Support faster triage conversations
-- Encourage timely follow-up with licensed clinicians
-
-It must not be used as a substitute for professional medical evaluation, emergency care, or individualized treatment decisions.
+MOKSHA is intentionally designed as a diagnostic support system, not a diagnosis engine. It must not be used as a substitute for professional medical evaluation, emergency care, or individualized treatment decisions.
