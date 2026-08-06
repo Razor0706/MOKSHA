@@ -336,6 +336,30 @@ python app.py
 
 Then open the Flask URL shown in the console and upload a supported image report.
 
+## Deployment
+
+MOKSHA can be deployed as an educational portfolio demo using Docker and Render.
+
+The included `Dockerfile` installs the Linux Tesseract OCR engine, Python dependencies, and Gunicorn. It also runs the service as a non-root user. The deployment image does not contain local uploads, trained model artifacts, or downloaded dataset caches.
+
+Render setup:
+
+1. Push the deployment branch to GitHub and create a Render **Web Service** from that branch.
+2. Select the **Docker** runtime. Render detects the included `Dockerfile` automatically.
+3. Set `TESSERACT_CMD` to `/usr/bin/tesseract`.
+4. Set a long random `SECRET_KEY` value in Render's environment variables.
+5. Optionally set `MAX_UPLOAD_MB` (default: `5`).
+6. Configure Render's health-check path as `/health`.
+
+The live demo must prominently state that it is an educational diagnostic-support prototype, not a diagnosis or treatment system. Do not use real patient reports on a public deployment.
+
+Branch workflow:
+
+- Keep the public production deployment connected to `main`.
+- Develop and test changes on feature branches such as `deployment-ready`.
+- Use a Render preview service for the development branch when you want to test it online.
+- Merge tested changes into `main` only when the production deployment is ready to update.
+
 ## Troubleshooting
 
 Common local setup issues:
