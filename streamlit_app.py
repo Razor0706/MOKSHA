@@ -56,12 +56,12 @@ with st.sidebar:
 # Main Content Area
 if uploaded_file is None:
     # Render the exact original landing page (templates/index.html)
-    with flask_app.app_context():
+    with flask_app.test_request_context("/"):
         try:
             rendered_html = render_template("index.html")
-            full_html = f"<html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
+            full_html = f"<!DOCTYPE html><html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
             components.html(full_html, height=850, scrolling=True)
-        except Exception:
+        except Exception as e:
             st.info("👈 Please upload a medical report image from the sidebar to begin analysis.")
 
 else:
@@ -74,12 +74,12 @@ else:
     with st.spinner("Analyzing report..."):
         try:
             result = analyze_report(temp_path)
-            with flask_app.app_context():
+            with flask_app.test_request_context("/"):
                 rendered_html = render_template("result.html", **result)
-                full_html = f"<html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
+                full_html = f"<!DOCTYPE html><html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
                 components.html(full_html, height=1500, scrolling=True)
         except Exception as err:
-            with flask_app.app_context():
+            with flask_app.test_request_context("/"):
                 rendered_html = render_template("result.html", error=str(err))
-                full_html = f"<html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
+                full_html = f"<!DOCTYPE html><html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
                 components.html(full_html, height=600, scrolling=True)
