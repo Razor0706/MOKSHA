@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, current_app, jsonify, render_template, request
 from pathlib import Path
 from uuid import uuid4
 
@@ -14,6 +14,11 @@ main_bp = Blueprint("main", __name__)
 @main_bp.route("/")
 def home():
     return render_template("index.html")
+
+
+@main_bp.route("/health")
+def health():
+    return jsonify(status="ok")
 
 
 @main_bp.route("/upload", methods=["POST"])
@@ -33,7 +38,11 @@ def upload():
 
     try:
         result = analyze_report(filepath)
-    except Exception as error:
-        return render_template("result.html", error=str(error))
+    except Exception:
+        current_app.logger.exception("Report analysis failed")
+        return render_template(
+            "result.html",
+            error="The report could not be analyzed. Please upload a clearer supported image and try again.",
+        )
 
     return render_template("result.html", **result)
