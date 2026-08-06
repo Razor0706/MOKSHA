@@ -2,7 +2,7 @@ import re
 from difflib import SequenceMatcher
 
 
-VALUE_TOKEN_PATTERN = re.compile(r"(?<![A-Za-z0-9])[\dOoIiLl]{1,3}(?:[.,][\dOoIiLl]{1,2})?(?![A-Za-z0-9])")
+VALUE_TOKEN_PATTERN = re.compile(r"(?<![A-Za-z0-9])[\dOoIiLl]{1,4}(?:[.,][\dOoIiLl]{1,2})?(?![A-Za-z0-9])")
 BP_PATTERN = re.compile(r"(?<!\d)([0-2]?[\dOoIiLl]{2})\s*[/|\\-]\s*([0-1]?[\dOoIiLl]{2})(?!\d)")
 
 
@@ -66,7 +66,7 @@ def find_numbers(line):
         if value is None:
             continue
 
-        if 0.3 <= value <= 600 and int(value) not in range(1900, 2101):
+        if 0.1 <= value <= 2000 and int(value) not in range(1900, 2101):
             numbers.append(value)
     return numbers
 
@@ -90,24 +90,29 @@ def similarity(left, right):
 
 
 def keyword_score(text, keywords):
+    text_lower = normalize_ocr_text(text).lower()
     clean_text = clean_label_text(text)
     tokens = clean_text.split()
     best = 0.0
 
     for keyword in keywords:
-        keyword = clean_label_text(keyword)
-        if keyword in clean_text:
+        kw_lower = keyword.lower()
+        if re.search(r"\b" + re.escape(kw_lower) + r"\b", text_lower):
+            return 1.0
+
+        kw_clean = clean_label_text(keyword)
+        if kw_clean and kw_clean in clean_text:
             best = max(best, 1.0)
 
-        keyword_parts = keyword.split()
+        keyword_parts = kw_clean.split()
         if len(keyword_parts) > 1:
             window_size = len(keyword_parts)
             for index in range(0, max(1, len(tokens) - window_size + 1)):
                 window = " ".join(tokens[index : index + window_size])
-                best = max(best, similarity(window, keyword))
+                best = max(best, similarity(window, kw_clean))
         else:
             for token in tokens:
-                best = max(best, similarity(token, keyword))
+                best = max(best, similarity(token, kw_clean))
 
     return best
 

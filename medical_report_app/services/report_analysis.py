@@ -7,13 +7,18 @@ from .presentation import build_value_rows
 from .report_parser import detect_report_type, extract_values
 from .risk import detect_condition, predict_risk, recommend_specialist
 
+MIN_BIOMARKER_THRESHOLD = 1
+
 
 def analyze_report(filepath):
     try:
         ocr_text = extract_text(filepath)
         values = extract_values(ocr_text)
-        if not any(value is not None for value in values.values()):
-            raise ValueError("Unable to confidently extract medically useful values. Please upload a clearer report.")
+        
+        # Enforce minimum biomarker detection threshold for reliable clinical prediction
+        detected_count = sum(1 for value in values.values() if value is not None)
+        if detected_count < MIN_BIOMARKER_THRESHOLD:
+            raise ValueError("Unable to confidently extract medically useful values from the report image. Please upload a clearer report.")
 
         report_type = detect_report_type(ocr_text)
         risk = predict_risk(values)

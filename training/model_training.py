@@ -1,5 +1,4 @@
 import json
-
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -11,10 +10,15 @@ from medical_report_app.config import TRAINED_MODEL_PATH, TRAINING_REPORT_PATH
 
 try:
     import joblib
-except ImportError as error:  # pragma: no cover - depends on runtime environment
+except ImportError as error:
     raise RuntimeError("joblib is required to save trained models. Install it with `pip install joblib`.") from error
 
-from .dataset_loader import dataset_metadata, load_uci_heart_disease_dataset
+from .dataset_loader import (
+    dataset_metadata,
+    load_uci_diabetes_dataset,
+    load_uci_heart_disease_dataset,
+    load_uci_liver_dataset,
+)
 from .preprocessing import build_preprocessor
 
 
@@ -62,7 +66,16 @@ def _evaluate_model(model_pipeline, x_test, y_test):
 
 
 def train_and_save_best_model(force_refresh=False):
+    # Load primary cardiometabolic dataset
     dataset = load_uci_heart_disease_dataset(force_refresh=force_refresh)
+    
+    # Pre-cache additional multi-domain datasets
+    try:
+        load_uci_diabetes_dataset(force_refresh=force_refresh)
+        load_uci_liver_dataset(force_refresh=force_refresh)
+    except Exception:
+        pass
+
     x = dataset.drop(columns=["target"]).copy()
     y = dataset["target"].astype(int)
 
@@ -119,6 +132,7 @@ def train_and_save_best_model(force_refresh=False):
         "all_model_metrics": comparison,
         "metadata": metadata,
     }
+    TRAINED_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(bundle, TRAINED_MODEL_PATH)
 
     report = {
@@ -127,5 +141,6 @@ def train_and_save_best_model(force_refresh=False):
         "all_model_metrics": comparison,
         "dataset": dataset_metadata(),
     }
+    TRAINING_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     TRAINING_REPORT_PATH.write_text(json.dumps(report, indent=2), encoding="utf-8")
     return report
