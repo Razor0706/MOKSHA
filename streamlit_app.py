@@ -37,20 +37,52 @@ def get_clean_html(template_name, **context):
 with st.sidebar:
     st.title("🏥 MOKSHA")
     st.markdown("### Upload Medical Report")
-    uploaded_file = st.file_uploader(
+    sidebar_upload = st.file_uploader(
         "Choose an image file",
         type=["png", "jpg", "jpeg"],
         help="Supports PNG, JPG, JPEG report images",
+        key="sidebar_uploader",
     )
+
+# Main Content Header & Upload Area
+uploaded_file = sidebar_upload
+
+if uploaded_file is None:
+    st.markdown(
+        """
+        <div style="background-color: #1e293b; padding: 1.5rem; border-radius: 12px; border: 1px solid #334155; margin-bottom: 1.5rem;">
+            <h2 style="color: #f8fafc; margin-top: 0;">🏥 MOKSHA — AI Diagnostic Support System</h2>
+            <p style="color: #94a3b8; font-size: 1.05rem;">
+                Upload a medical report image (PNG, JPG, or JPEG) below to get structured biomarker extraction,
+                cardiometabolic risk scoring, condition detection, and specialist recommendations.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    main_upload = st.file_uploader(
+        "📁 Click or Drag & Drop Medical Report Image Here",
+        type=["png", "jpg", "jpeg"],
+        key="main_uploader",
+    )
+    if main_upload is not None:
+        uploaded_file = main_upload
 
 # Main Content Display
 if uploaded_file is None:
-    # Render original landing page with full CSS styling
+    # Render landing page hero details below upload box
     try:
         html_out = get_clean_html("index.html")
-        components.html(html_out, height=850, scrolling=True)
+        # Remove original static HTML form from landing page view to prevent 405 POST error
+        if '<form class="upload-form"' in html_out:
+            start_idx = html_out.find('<form class="upload-form"')
+            end_idx = html_out.find('</form>', start_idx) + len('</form>')
+            html_out = html_out[:start_idx] + '<div class="privacy-strip"><strong>Notice:</strong> Please use the file uploader above to analyze your report.</div>' + html_out[end_idx:]
+        components.html(html_out, height=650, scrolling=True)
     except Exception:
-        st.info("👈 Please upload a medical report image from the sidebar to begin analysis.")
+        pass
+
 else:
     # Process uploaded report image
     file_suffix = Path(uploaded_file.name).suffix
