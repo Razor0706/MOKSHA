@@ -342,6 +342,16 @@ MOKSHA can be deployed as an educational portfolio demo using Docker and Render.
 
 The included `Dockerfile` installs the Linux Tesseract OCR engine, Python dependencies, and Gunicorn. It also runs the service as a non-root user. The deployment image does not contain local uploads, trained model artifacts, or downloaded dataset caches.
 
+Streamlit Community Cloud setup (Recommended - 100% Free Forever):
+
+1. Push your repository to GitHub.
+2. Log in to [Streamlit Community Cloud](https://share.streamlit.io/).
+3. Click **New app** -> Select your GitHub repository.
+4. Set Main file path to: `streamlit_app.py`.
+5. Click **Deploy!**
+
+*(Note: `packages.txt` automatically installs `tesseract-ocr` system dependencies on Streamlit Cloud).*
+
 Render setup:
 
 1. Push the deployment branch to GitHub and create a Render **Web Service** from that branch.
