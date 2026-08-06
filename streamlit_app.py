@@ -15,35 +15,25 @@ st.set_page_config(
     page_title="MOKSHA - AI Diagnostic Support System",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 # Load original static CSS file
 css_path = BASE_DIR / "static" / "style.css"
 css_content = css_path.read_text(encoding="utf-8") if css_path.exists() else ""
 
-# Inject global CSS into Streamlit
-st.markdown(
-    f"""
-    <style>
-    {css_content}
-    .stApp {{
-        background-color: #0b0f19;
-    }}
-    .block-container {{
-        padding: 1rem 1rem !important;
-        max-width: 100% !important;
-    }}
-    iframe {{
-        border: none !important;
-        width: 100% !important;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+# Helper to inject inline CSS into Flask rendered HTML
+def get_clean_html(template_name, **context):
+    with flask_app.test_request_context("/"):
+        rendered_html = render_template(template_name, **context)
+        # Replace external CSS link tag with actual inline CSS rules
+        clean_html = rendered_html.replace(
+            '<link rel="stylesheet" href="/static/style.css">',
+            f"<style>{css_content}</style>",
+        )
+        return clean_html
 
-# Sidebar File Uploader
+# Sidebar Navigation & Upload
 with st.sidebar:
     st.title("🏥 MOKSHA")
     st.markdown("### Upload Medical Report")
@@ -53,19 +43,16 @@ with st.sidebar:
         help="Supports PNG, JPG, JPEG report images",
     )
 
-# Main Content Area
+# Main Content Display
 if uploaded_file is None:
-    # Render the exact original landing page (templates/index.html)
-    with flask_app.test_request_context("/"):
-        try:
-            rendered_html = render_template("index.html")
-            full_html = f"<!DOCTYPE html><html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
-            components.html(full_html, height=850, scrolling=True)
-        except Exception as e:
-            st.info("👈 Please upload a medical report image from the sidebar to begin analysis.")
-
+    # Render original landing page with full CSS styling
+    try:
+        html_out = get_clean_html("index.html")
+        components.html(html_out, height=850, scrolling=True)
+    except Exception:
+        st.info("👈 Please upload a medical report image from the sidebar to begin analysis.")
 else:
-    # Save file temporarily and run analysis
+    # Process uploaded report image
     file_suffix = Path(uploaded_file.name).suffix
     with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
         temp_file.write(uploaded_file.getvalue())
@@ -74,12 +61,8 @@ else:
     with st.spinner("Analyzing report..."):
         try:
             result = analyze_report(temp_path)
-            with flask_app.test_request_context("/"):
-                rendered_html = render_template("result.html", **result)
-                full_html = f"<!DOCTYPE html><html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
-                components.html(full_html, height=1500, scrolling=True)
+            html_out = get_clean_html("result.html", **result)
+            components.html(html_out, height=1800, scrolling=True)
         except Exception as err:
-            with flask_app.test_request_context("/"):
-                rendered_html = render_template("result.html", error=str(err))
-                full_html = f"<!DOCTYPE html><html><head><style>{css_content}</style></head><body>{rendered_html}</body></html>"
-                components.html(full_html, height=600, scrolling=True)
+            html_out = get_clean_html("result.html", error=str(err))
+            components.html(html_out, height=600, scrolling=True)
