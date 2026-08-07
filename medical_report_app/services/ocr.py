@@ -77,9 +77,12 @@ def extract_text(filepath):
         if _score_ocr_text(alt_text) > _score_ocr_text(text):
             text = alt_text
 
-    print("\n========== OCR TEXT FOR DEBUGGING ==========")
-    print(text)
-    print("===========================================\n")
+    try:
+        print("\n========== OCR TEXT FOR DEBUGGING ==========")
+        print(text.encode("ascii", errors="replace").decode("ascii"))
+        print("===========================================\n")
+    except Exception:
+        pass
 
     if len(text.strip()) < 10:
         raise ValueError("Unable to confidently extract values. Please upload a clearer report.")

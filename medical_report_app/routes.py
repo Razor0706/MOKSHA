@@ -38,11 +38,9 @@ def upload():
 
     try:
         result = analyze_report(filepath)
-    except Exception:
+    except Exception as exc:
         current_app.logger.exception("Report analysis failed")
-        return render_template(
-            "result.html",
-            error="The report could not be analyzed. Please upload a clearer supported image and try again.",
-        )
+        error_msg = str(exc) if str(exc) else "The report could not be analyzed. Please upload a clearer supported image and try again."
+        return render_template("result.html", error=error_msg)
 
     return render_template("result.html", **result)

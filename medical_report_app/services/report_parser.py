@@ -132,9 +132,12 @@ def extract_values(text):
             extracted[test_name] = candidate["value"]
             used_candidate_ids.add(candidate_id)
 
-    print("========== EXTRACTED VALUES FOR DEBUGGING ==========")
-    print({k: v for k, v in extracted.items() if v is not None})
-    print("====================================================\n")
+    try:
+        print("========== EXTRACTED VALUES FOR DEBUGGING ==========")
+        print({k: v for k, v in extracted.items() if v is not None})
+        print("====================================================\n")
+    except Exception:
+        pass
     return extracted
 
 
