@@ -11,7 +11,7 @@ MOKSHA is a diagnostic support tool only. It does not diagnose disease, replace 
 - **Minimum Detection Threshold**: Enforces validation (`MIN_BIOMARKER_THRESHOLD`) to ensure adequate data before running risk analysis.
 - **Multi-Dataset ML Infrastructure**: Automated fetching, PII sanitization, and model training across multiple UCI datasets (Heart Disease, Diabetes, Indian Liver Patient Dataset).
 - **Rule Engine & Multi-Specialist Referrals**: Expanded clinical rules mapping findings to relevant condition warnings and chaining specialist recommendations (Endocrinologist, Nephrologist, Hepatologist, Hematologist, Cardiologist, etc.).
-- **Dual Web Architecture**: Native Flask web application alongside a Streamlit cloud wrapper (`streamlit_app.py`) for 1-click free deployment.
+- **Dual Web Architecture**: Native Flask web application alongside a Streamlit interface (`streamlit_app.py`).
 - **Privacy-by-Design**: Ephemeral upload handling with immediate temporary file deletion and automatic PII redaction.
 
 ## Architecture
@@ -228,26 +228,6 @@ To run MOKSHA using the Streamlit interface:
 ```bash
 streamlit run streamlit_app.py
 ```
-
-## Deployment
-
-### Streamlit Community Cloud (Recommended - 100% Free Forever)
-
-1. Push your repository to GitHub.
-2. Log in to [Streamlit Community Cloud](https://share.streamlit.io/).
-3. Click **New app** -> Select your GitHub repository.
-4. Set Main file path to: `streamlit_app.py`.
-5. Click **Deploy!**
-
-*(Note: `packages.txt` automatically installs `tesseract-ocr` system dependencies on Streamlit Cloud).*
-
-### Render Docker Setup
-
-1. Push the deployment branch to GitHub and create a Render **Web Service**.
-2. Select **Docker** runtime.
-3. Set `TESSERACT_CMD` to `/usr/bin/tesseract`.
-4. Set `SECRET_KEY` in environment variables.
-5. Set health-check path as `/health`.
 
 ## Model Evaluation
 
