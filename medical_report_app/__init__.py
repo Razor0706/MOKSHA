@@ -21,8 +21,9 @@ def create_app():
         MAX_CONTENT_LENGTH=int(os.getenv("MAX_UPLOAD_MB", "5")) * 1024 * 1024,
         SECRET_KEY=os.getenv("SECRET_KEY", secrets.token_urlsafe(32)),
     )
-    # Render terminates HTTPS before forwarding the request to this container.
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+    # Enable ProxyFix if behind a reverse proxy (e.g. Render/Nginx)
+    if os.getenv("USE_PROXY_FIX", "false").lower() in ("true", "1"):
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     configure_upload_folder(app)
     app.register_blueprint(main_bp)
 
