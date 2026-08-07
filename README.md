@@ -176,7 +176,7 @@ The result UI includes:
 
 ### Prerequisites
 
-- Python 3.12 or 3.13
+- Python 3.12 or later
 - `pip`
 - Tesseract OCR installed separately on your system
 - Internet access on first run to fetch UCI datasets via `ucimlrepo`
