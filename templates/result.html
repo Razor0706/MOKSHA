@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnostic Summary - MOKSHA</title>
+    <script>
+        try {
+            if (localStorage.getItem("moksha-theme") === "dark") {
+                document.documentElement.classList.add("dark-mode");
+            }
+        } catch (error) {}
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
 </head>
 <body>
     <main class="dashboard-shell">
@@ -14,7 +22,12 @@
                     <p class="eyebrow">MOKSHA Analysis</p>
                     <h1>Diagnostic Support Summary</h1>
                 </div>
-                <a class="back-link" href="{{ url_for('main.home') }}">Go Back</a>
+                <div class="topbar-actions">
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+                        <span data-theme-label>Dark mode</span>
+                    </button>
+                    <a class="back-link" href="{{ url_for('main.home') }}">Go Back</a>
+                </div>
             </div>
 
             {% if error %}

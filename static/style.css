@@ -205,6 +205,22 @@ button:hover,
     background: var(--primary-dark);
 }
 
+.theme-toggle {
+    width: auto;
+    min-height: 38px;
+    margin-left: auto;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font-size: 13px;
+}
+
+.theme-toggle:hover {
+    background: var(--surface);
+    color: var(--primary);
+}
+
 .capability-panel {
     padding: 22px;
     display: grid;
@@ -501,6 +517,77 @@ tbody tr:last-child td {
     margin-top: 18px;
 }
 
+.topbar-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.topbar-actions .theme-toggle {
+    margin-left: 0;
+}
+
+html.dark-mode {
+    color-scheme: dark;
+}
+
+html.dark-mode body {
+    --page: #0d1720;
+    --surface: #14212c;
+    --ink: #e7f0f5;
+    --muted: #a9bbc7;
+    --line: #2c4250;
+    --primary: #43b6d9;
+    --primary-dark: #2383a4;
+    --green: #52c986;
+    --orange: #f2a547;
+    --red: #f07171;
+    --gray: #9caeb9;
+    --soft-green: #153a2a;
+    --soft-orange: #402b16;
+    --soft-red: #421f26;
+    --shadow: 0 18px 45px rgba(0, 0, 0, 0.3);
+    background: radial-gradient(circle at top left, rgba(67, 182, 217, 0.18), transparent 34%),
+        linear-gradient(135deg, #101b24 0%, var(--page) 48%, #142b24 100%);
+}
+
+html.dark-mode .file-drop,
+html.dark-mode .metric-tile,
+html.dark-mode .notice-card {
+    background: #182833;
+}
+
+html.dark-mode .privacy-strip {
+    background: #102a36;
+    border-color: #275168;
+}
+
+html.dark-mode .privacy-strip strong {
+    color: #76d3ee;
+}
+
+html.dark-mode table thead {
+    background: #1a303d;
+}
+
+html.dark-mode table tbody tr:nth-child(even) {
+    background: #172630;
+}
+
+html.dark-mode table tbody tr:nth-child(odd) {
+    background: #14212c;
+}
+
+html.dark-mode table th,
+html.dark-mode table td {
+    border-color: var(--line);
+}
+
+html.dark-mode .ocr-debug pre {
+    background: #0b131a;
+    color: #dbe8ee;
+}
+
 @media (max-width: 900px) {
     .hero-panel,
     .summary-grid,
@@ -547,6 +634,17 @@ tbody tr:last-child td {
     }
 
     .back-link {
+        width: 100%;
+    }
+
+    .topbar-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .topbar-actions .theme-toggle,
+    .topbar-actions .back-link,
+    .brand-row .theme-toggle {
         width: 100%;
     }
 }
