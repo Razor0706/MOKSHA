@@ -1,6 +1,9 @@
 [server]
 maxUploadSize = 5
 
+[browser]
+gatherUsageStats = false
+
 [theme]
 primaryColor = "#0d6f8f"
 backgroundColor = "#f3f7fa"
