@@ -16,6 +16,46 @@ from medical_report_app.services.report_analysis import analyze_report
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 RESULT_FRAME_HEIGHT = 1800
 
+DARK_TEMPLATE_CSS = """
+:root {
+    --page: #0d1720;
+    --surface: #14212c;
+    --ink: #e7f0f5;
+    --muted: #a9bbc7;
+    --line: #2c4250;
+    --primary: #43b6d9;
+    --primary-dark: #2383a4;
+    --green: #52c986;
+    --orange: #f2a547;
+    --red: #f07171;
+    --gray: #9caeb9;
+    --soft-green: #153a2a;
+    --soft-orange: #402b16;
+    --soft-red: #421f26;
+    --shadow: 0 18px 45px rgba(0, 0, 0, 0.3);
+}
+
+body {
+    background: radial-gradient(circle at top left, rgba(67, 182, 217, 0.18), transparent 34%),
+        linear-gradient(135deg, #101b24 0%, var(--page) 48%, #142b24 100%);
+}
+
+.hero-content, .capability-panel, .summary-card, .product-section, .insight-card,
+.alert-card, .ocr-debug, .file-drop, .metric-tile, .privacy-strip {
+    background: var(--surface);
+    border-color: var(--line);
+}
+
+.file-drop, .metric-tile { background: #182833; }
+.privacy-strip { background: #102a36; border-color: #275168; }
+.privacy-strip strong { color: #76d3ee; }
+table thead { background: #1a303d; }
+table tbody tr:nth-child(even) { background: #172630; }
+table tbody tr:nth-child(odd) { background: #14212c; }
+table th, table td { border-color: var(--line); }
+.ocr-debug pre { background: #0b131a; color: #dbe8ee; }
+"""
+
 
 st.set_page_config(
     page_title="MOKSHA - AI Diagnostic Support System",
@@ -36,13 +76,14 @@ def load_css():
     return css_path.read_text(encoding="utf-8") if css_path.exists() else ""
 
 
-def render_template_html(template_name, **context):
+def render_template_html(template_name, dark_mode=False, **context):
     flask_app = get_flask_app()
     with flask_app.test_request_context("/"):
         rendered_html = render_template(template_name, **context)
 
     # The iframe cannot control Streamlit navigation, so hide template links here.
-    inline_css = f"<style>{load_css()} .back-link {{ display: none !important; }}</style>"
+    theme_css = DARK_TEMPLATE_CSS if dark_mode else ""
+    inline_css = f"<style>{load_css()} {theme_css} .back-link {{ display: none !important; }}</style>"
     return rendered_html.replace('<link rel="stylesheet" href="/static/style.css">', inline_css)
 
 
@@ -69,6 +110,29 @@ def initialize_session():
     st.session_state.setdefault("result", None)
     st.session_state.setdefault("error_message", None)
     st.session_state.setdefault("uploader_version", 0)
+    st.session_state.setdefault("dark_mode", False)
+
+
+def inject_streamlit_theme(dark_mode):
+    """Theme Streamlit controls to match the selected report theme."""
+    if not dark_mode:
+        return
+
+    st.markdown(
+        """
+        <style>
+        .stApp { background: #0d1720; color: #e7f0f5; }
+        [data-testid="stSidebar"] { background: #14212c; border-right: 1px solid #2c4250; }
+        [data-testid="stSidebar"] * { color: #e7f0f5; }
+        [data-testid="stFileUploaderDropzone"] { background: #182833; border-color: #3d6274; }
+        [data-testid="stFileUploaderDropzone"] * { color: #dbe8ee; }
+        [data-testid="stButton"] button { border-color: #3d6274; }
+        [data-testid="stCaptionContainer"] { color: #a9bbc7; }
+        [data-testid="stMarkdownContainer"] p { color: inherit; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def analyze_uploaded_file(uploaded_file):
@@ -88,6 +152,7 @@ def show_sidebar():
     with st.sidebar:
         st.title("MOKSHA")
         st.caption("AI-assisted medical report screening")
+        st.toggle("Dark mode", key="dark_mode")
         st.divider()
 
         if st.session_state.page == "result":
@@ -112,7 +177,9 @@ def show_home():
     )
 
     if uploaded_file is None:
-        landing_html = remove_landing_form(render_template_html("index.html"))
+        landing_html = remove_landing_form(
+            render_template_html("index.html", dark_mode=st.session_state.dark_mode)
+        )
         components.html(landing_html, height=650, scrolling=True)
         return
 
@@ -146,7 +213,11 @@ def show_result():
         st.button("Back to upload", use_container_width=True, on_click=reset_analysis)
 
     if st.session_state.result is not None:
-        result_html = render_template_html("result.html", **st.session_state.result)
+        result_html = render_template_html(
+            "result.html",
+            dark_mode=st.session_state.dark_mode,
+            **st.session_state.result,
+        )
         components.html(result_html, height=RESULT_FRAME_HEIGHT, scrolling=True)
     else:
         st.error(st.session_state.error_message or "No result is available for this report.")
@@ -154,6 +225,7 @@ def show_result():
 
 def main():
     initialize_session()
+    inject_streamlit_theme(st.session_state.dark_mode)
     show_sidebar()
 
     if st.session_state.page == "result":
