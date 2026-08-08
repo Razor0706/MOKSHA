@@ -49,11 +49,24 @@ body {
 .file-drop, .metric-tile { background: #182833; }
 .privacy-strip { background: #102a36; border-color: #275168; }
 .privacy-strip strong { color: #76d3ee; }
-table thead { background: #1a303d; }
-table tbody tr:nth-child(even) { background: #172630; }
-table tbody tr:nth-child(odd) { background: #14212c; }
-table th, table td { border-color: var(--line); }
+.notice-card { background: #182833; border-color: var(--line); }
+table thead, table th { background: #1a303d; color: #a9bbc7; }
+table td { color: #e7f0f5; border-color: var(--line); }
+table tbody tr:nth-child(even), .table-row.normal { background: #172630; }
+table tbody tr:nth-child(odd), .table-row.moderate { background: #332612; }
+.table-row.high { background: #351d25; }
+.status-pill.missing, .risk-badge.unknown { background: #273a47; color: #c4d2da; }
+.disclaimer { border-color: #80414a; background: #351d25; color: #ff9d9d; }
 .ocr-debug pre { background: #0b131a; color: #dbe8ee; }
+"""
+
+STREAMLIT_EMBED_CSS = """
+html, body { width: 100%; overflow-x: hidden; }
+.landing-shell, .dashboard-shell {
+    width: calc(100% - 32px);
+    max-width: 1380px;
+    padding: 24px 0;
+}
 """
 
 
@@ -79,11 +92,11 @@ def load_css():
 def render_template_html(template_name, dark_mode=False, **context):
     flask_app = get_flask_app()
     with flask_app.test_request_context("/"):
-        rendered_html = render_template(template_name, **context)
+        rendered_html = render_template(template_name, embedded_mode=True, **context)
 
     # The iframe cannot control Streamlit navigation, so hide template links here.
     theme_css = DARK_TEMPLATE_CSS if dark_mode else ""
-    inline_css = f"<style>{load_css()} {theme_css} .back-link {{ display: none !important; }}</style>"
+    inline_css = f"<style>{load_css()} {STREAMLIT_EMBED_CSS} {theme_css}</style>"
     return rendered_html.replace('<link rel="stylesheet" href="/static/style.css">', inline_css)
 
 

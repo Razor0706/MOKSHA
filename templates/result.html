@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnostic Summary - MOKSHA</title>
+    {% if not embedded_mode %}
     <script>
         try {
             if (localStorage.getItem("moksha-theme") === "dark") {
@@ -11,8 +12,11 @@
             }
         } catch (error) {}
     </script>
+    {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% if not embedded_mode %}
     <script src="{{ url_for('static', filename='theme.js') }}" defer></script>
+    {% endif %}
 </head>
 <body>
     <main class="dashboard-shell">
@@ -22,12 +26,14 @@
                     <p class="eyebrow">MOKSHA Analysis</p>
                     <h1>Diagnostic Support Summary</h1>
                 </div>
+                {% if not embedded_mode %}
                 <div class="topbar-actions">
                     <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
                         <span data-theme-label>Dark mode</span>
                     </button>
                     <a class="back-link" href="{{ url_for('main.home') }}">Go Back</a>
                 </div>
+                {% endif %}
             </div>
 
             {% if error %}
