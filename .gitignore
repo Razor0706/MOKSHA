@@ -14,3 +14,4 @@ datasets/processed/*.csv
 Thumbs.db
 *.swp
 *.swo
+PROJECT_CONTEXT.md
