@@ -566,21 +566,38 @@ html.dark-mode .privacy-strip strong {
     color: #76d3ee;
 }
 
-html.dark-mode table thead {
-    background: #1a303d;
-}
-
-html.dark-mode table tbody tr:nth-child(even) {
-    background: #172630;
-}
-
-html.dark-mode table tbody tr:nth-child(odd) {
+html.dark-mode table {
     background: #14212c;
 }
 
-html.dark-mode table th,
-html.dark-mode table td {
+html.dark-mode table thead,
+html.dark-mode table th {
+    background: #1a303d;
     border-color: var(--line);
+    color: #a9bbc7;
+}
+
+html.dark-mode table td {
+    color: #e7f0f5;
+    border-color: var(--line);
+}
+
+html.dark-mode .table-row.normal {
+    background: #172630;
+}
+
+html.dark-mode .table-row.moderate {
+    background: #332612;
+}
+
+html.dark-mode .table-row.high {
+    background: #351d25;
+}
+
+html.dark-mode .status-pill.missing,
+html.dark-mode .risk-badge.unknown {
+    background: #273a47;
+    color: #c4d2da;
 }
 
 html.dark-mode .ocr-debug pre {
