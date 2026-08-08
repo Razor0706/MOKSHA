@@ -36,6 +36,7 @@ body {
     min-height: 100vh;
     margin: 0 auto;
     padding: 44px 0;
+    overflow-x: auto;
 }
 
 .landing-shell {
@@ -245,6 +246,7 @@ button:hover,
 .dashboard-card {
     display: grid;
     gap: 22px;
+    min-width: 720px;
 }
 
 .topbar {

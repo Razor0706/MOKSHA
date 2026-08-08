@@ -68,12 +68,13 @@ html, body, * { scrollbar-color: #667985 #0b131a; }
 """
 
 STREAMLIT_EMBED_CSS = """
-html, body { width: 100%; overflow-x: hidden; }
+html, body { width: 100%; overflow-x: auto; }
 .landing-shell, .dashboard-shell {
     width: calc(100% - 32px);
     max-width: 1380px;
     padding: 24px 0;
 }
+.dashboard-card { min-width: 720px; }
 """
 
 
