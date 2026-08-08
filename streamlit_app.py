@@ -162,18 +162,29 @@ def inject_streamlit_theme(dark_mode):
         [data-testid="stSidebar"] * { color: #e7f0f5; }
         [data-testid="stFileUploaderDropzone"] { background: #182833; border-color: #3d6274; }
         [data-testid="stFileUploaderDropzone"] * { color: #dbe8ee; }
-        [data-testid="stFileUploaderFile"] {
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] > div,
+        [data-testid="stFileUploader"] div:has(> [data-testid="stFileUploaderFileName"]),
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFileData"] {
             background: #182833 !important;
             border: 1px solid #3d6274 !important;
             color: #e7f0f5 !important;
         }
-        [data-testid="stFileUploaderFile"] * { color: #e7f0f5 !important; }
-        [data-testid="stFileUploaderFile"] small { color: #a9bbc7 !important; }
-        [data-testid="stFileUploaderFile"] button {
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] *,
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFileData"] * {
+            color: #e7f0f5 !important;
+        }
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] small,
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFileData"] small {
+            color: #a9bbc7 !important;
+        }
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button {
             background: transparent !important;
             border-color: transparent !important;
         }
-        [data-testid="stFileUploaderFile"] svg { fill: #a9bbc7 !important; }
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] svg {
+            fill: #a9bbc7 !important;
+        }
         [data-testid="stButton"] button,
         [data-testid="stBaseButton-secondary"] {
             background: #182833 !important;
