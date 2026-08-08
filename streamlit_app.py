@@ -236,6 +236,56 @@ def inject_streamlit_theme(dark_mode):
     )
 
 
+def preserve_scroll_after_theme_change():
+    """Keep the visible position when the sidebar theme toggle reruns Streamlit."""
+    components.html(
+        """
+        <script>
+        (() => {
+            const host = window.parent;
+            const storageKey = "moksha-theme-scroll";
+
+            const reportFrame = () => Array.from(host.document.querySelectorAll("iframe"))
+                .find((frame) => frame !== window.frameElement && frame.clientHeight > 200);
+
+            if (!host.__mokshaThemeScrollListener) {
+                host.__mokshaThemeScrollListener = true;
+                host.document.addEventListener("change", (event) => {
+                    const isSidebarToggle = event.target.matches("input[type='checkbox']")
+                        && event.target.closest("[data-testid='stSidebar']");
+                    if (!isSidebarToggle) return;
+
+                    const frame = reportFrame();
+                    let reportScroll = 0;
+                    try { reportScroll = frame ? frame.contentWindow.scrollY : 0; } catch (error) {}
+                    host.localStorage.setItem(storageKey, JSON.stringify({
+                        page: host.scrollY,
+                        report: reportScroll,
+                    }));
+                });
+            }
+
+            try {
+                const saved = JSON.parse(host.localStorage.getItem(storageKey));
+                if (!saved) return;
+                host.localStorage.removeItem(storageKey);
+
+                // Restore twice because the report iframe mounts after the Streamlit shell.
+                const restore = () => {
+                    host.scrollTo({ top: saved.page || 0, behavior: "auto" });
+                    const frame = reportFrame();
+                    if (frame) frame.contentWindow.scrollTo({ top: saved.report || 0, behavior: "auto" });
+                };
+                setTimeout(restore, 150);
+                setTimeout(restore, 600);
+            } catch (error) {}
+        })();
+        </script>
+        """,
+        height=0,
+    )
+
+
 def analyze_uploaded_file(uploaded_file):
     if uploaded_file.size > MAX_UPLOAD_BYTES:
         raise ValueError("Please upload an image smaller than 5 MB.")
@@ -333,6 +383,8 @@ def main():
         show_result()
     else:
         show_home()
+
+    preserve_scroll_after_theme_change()
 
 
 if __name__ == "__main__":
