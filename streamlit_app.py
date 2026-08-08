@@ -60,6 +60,11 @@ table tbody tr:nth-child(odd), .table-row.moderate { background: #332612 !import
 .status-pill.missing, .risk-badge.unknown { background: #273a47 !important; color: #c4d2da !important; }
 .disclaimer { border-color: #80414a !important; background: #351d25 !important; color: #ff9d9d !important; }
 .ocr-debug pre { background: #0b131a !important; color: #dbe8ee !important; }
+html, body, * { scrollbar-color: #667985 #0b131a; }
+*::-webkit-scrollbar { width: 12px; height: 12px; }
+*::-webkit-scrollbar-track { background: #0b131a; }
+*::-webkit-scrollbar-thumb { background: #667985; border: 3px solid #0b131a; border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: #91a5b0; }
 """
 
 STREAMLIT_EMBED_CSS = """
@@ -157,6 +162,18 @@ def inject_streamlit_theme(dark_mode):
         [data-testid="stSidebar"] * { color: #e7f0f5; }
         [data-testid="stFileUploaderDropzone"] { background: #182833; border-color: #3d6274; }
         [data-testid="stFileUploaderDropzone"] * { color: #dbe8ee; }
+        [data-testid="stFileUploaderFile"] {
+            background: #182833 !important;
+            border: 1px solid #3d6274 !important;
+            color: #e7f0f5 !important;
+        }
+        [data-testid="stFileUploaderFile"] * { color: #e7f0f5 !important; }
+        [data-testid="stFileUploaderFile"] small { color: #a9bbc7 !important; }
+        [data-testid="stFileUploaderFile"] button {
+            background: transparent !important;
+            border-color: transparent !important;
+        }
+        [data-testid="stFileUploaderFile"] svg { fill: #a9bbc7 !important; }
         [data-testid="stButton"] button,
         [data-testid="stBaseButton-secondary"] {
             background: #182833 !important;
@@ -180,6 +197,17 @@ def inject_streamlit_theme(dark_mode):
         [data-testid="stMarkdownContainer"] h1,
         [data-testid="stMarkdownContainer"] h2,
         [data-testid="stMarkdownContainer"] h3 { color: inherit; }
+        .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], * {
+            scrollbar-color: #667985 #0b131a;
+        }
+        *::-webkit-scrollbar { width: 12px; height: 12px; }
+        *::-webkit-scrollbar-track { background: #0b131a; }
+        *::-webkit-scrollbar-thumb {
+            background: #667985;
+            border: 3px solid #0b131a;
+            border-radius: 999px;
+        }
+        *::-webkit-scrollbar-thumb:hover { background: #91a5b0; }
         </style>
         """,
         unsafe_allow_html=True,
