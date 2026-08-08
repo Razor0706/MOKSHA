@@ -24,7 +24,6 @@ MOKSHA/
 |-- streamlit_app.py
 |-- train_model.py
 |-- packages.txt
-|-- Dockerfile
 |-- datasets/
 |   |-- raw/
 |   |   |-- heart_disease_raw.csv
@@ -210,16 +209,16 @@ pip install -r requirements-optional.txt
 
 ## Running the App
 
-### Recommended Local Flask Setup
+### Recommended Local Streamlit Setup
 
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-optional.txt
 python train_model.py
-python app.py
+streamlit run streamlit_app.py
 ```
 
-Open the local Flask URL printed in your console.
+Open the Streamlit URL printed in your console.
 
 ### Running with Streamlit
 
@@ -227,6 +226,23 @@ To run MOKSHA using the Streamlit interface:
 
 ```bash
 streamlit run streamlit_app.py
+```
+
+### Deploying on Streamlit Community Cloud
+
+1. Push the project to GitHub and create a new app in Streamlit Community Cloud.
+2. Select the repository branch you want to deploy and set the main file path to `streamlit_app.py`.
+3. Keep `requirements.txt` and `packages.txt` in the repository root. Streamlit installs Python packages from `requirements.txt` and the Linux Tesseract OCR engine from `packages.txt`.
+4. Do not upload real patient reports to a public app. The deployed application is an educational diagnostic-support prototype only.
+
+The Streamlit interface uses session state to process a report only after the user selects **Analyze report**. Results remain available while the user reviews them, and **Back to upload** clears the current result and uploader state before starting another analysis.
+
+### Optional Local Flask Setup
+
+The original Flask app remains available for local development:
+
+```bash
+python app.py
 ```
 
 ## Model Evaluation
