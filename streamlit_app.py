@@ -185,6 +185,17 @@ def inject_streamlit_theme(dark_mode):
         [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] svg {
             fill: #a9bbc7 !important;
         }
+        /* Streamlit changes the file-chip markup between releases. Keep all nested
+           uploader surfaces transparent so an unlabelled chip cannot fall back to white. */
+        [data-testid="stFileUploader"] * {
+            background-color: transparent !important;
+        }
+        [data-testid="stFileUploader"],
+        [data-testid="stFileUploaderDropzone"],
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
+        [data-testid="stFileUploader"] [class*="FileUploaderFile"] {
+            background-color: #182833 !important;
+        }
         [data-testid="stButton"] button,
         [data-testid="stBaseButton-secondary"] {
             background: #182833 !important;
