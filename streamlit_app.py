@@ -127,6 +127,16 @@ def initialize_session():
     st.session_state.setdefault("uploader_version", 0)
     st.session_state.setdefault("dark_mode", False)
 
+    # Keep the selected appearance after a browser refresh without storing health data.
+    saved_theme = st.query_params.get("theme")
+    if saved_theme in {"dark", "light"}:
+        st.session_state.dark_mode = saved_theme == "dark"
+
+
+def save_theme_preference():
+    """Persist only the UI preference in the URL, never report data."""
+    st.query_params["theme"] = "dark" if st.session_state.dark_mode else "light"
+
 
 def inject_streamlit_theme(dark_mode):
     """Theme Streamlit controls to match the selected report theme."""
@@ -147,18 +157,22 @@ def inject_streamlit_theme(dark_mode):
         [data-testid="stSidebar"] * { color: #e7f0f5; }
         [data-testid="stFileUploaderDropzone"] { background: #182833; border-color: #3d6274; }
         [data-testid="stFileUploaderDropzone"] * { color: #dbe8ee; }
-        [data-testid="stButton"] button {
-            background: #182833;
-            border-color: #3d6274;
-            color: #e7f0f5;
+        [data-testid="stButton"] button,
+        [data-testid="stBaseButton-secondary"] {
+            background: #182833 !important;
+            border-color: #3d6274 !important;
+            color: #e7f0f5 !important;
         }
-        [data-testid="stButton"] button[kind="primary"] {
-            background: #2383a4;
-            border-color: #43b6d9;
-            color: #ffffff;
+        [data-testid="stButton"] button[kind="primary"],
+        [data-testid="stBaseButton-primary"] {
+            background: #2383a4 !important;
+            border-color: #43b6d9 !important;
+            color: #ffffff !important;
         }
-        [data-testid="stButton"] button:hover { background: #244352; color: #ffffff; }
-        [data-testid="stButton"] button[kind="primary"]:hover { background: #43b6d9; }
+        [data-testid="stButton"] button:hover,
+        [data-testid="stBaseButton-secondary"]:hover { background: #244352 !important; color: #ffffff !important; }
+        [data-testid="stButton"] button[kind="primary"]:hover,
+        [data-testid="stBaseButton-primary"]:hover { background: #43b6d9 !important; }
         [data-testid="stImage"] img { border: 1px solid #2c4250; }
         [data-testid="stCaptionContainer"] { color: #a9bbc7; }
         [data-testid="stMarkdownContainer"] p,
@@ -189,7 +203,7 @@ def show_sidebar():
     with st.sidebar:
         st.title("MOKSHA")
         st.caption("AI-assisted medical report screening")
-        st.toggle("Dark mode", key="dark_mode")
+        st.toggle("Dark mode", key="dark_mode", on_change=save_theme_preference)
         st.divider()
 
         if st.session_state.page == "result":
