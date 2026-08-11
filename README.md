@@ -229,16 +229,6 @@ To run MOKSHA using the Streamlit interface:
 python -m streamlit run streamlit_app.py
 ```
 
-### Deploying on Streamlit Community Cloud
-
-1. Push the project to GitHub and create a new app in Streamlit Community Cloud.
-2. Select the `main` branch and set the main file path to `streamlit_app.py`.
-3. Keep `requirements.txt` and `packages.txt` in the repository root. Streamlit installs Python packages from `requirements.txt` and the Linux Tesseract OCR engine from `packages.txt`.
-4. In **Advanced settings**, use Python 3.12 unless you have verified another supported version locally. No secrets are required for the current app.
-5. Do not upload real patient reports to a public app. The deployed application is an educational diagnostic-support prototype only.
-
-The Streamlit interface uses session state to process a report only after the user selects **Analyze report**. Results remain available while the user reviews them, and **Back to upload** clears the current result and uploader state before starting another analysis. Browser usage telemetry is disabled in `.streamlit/config.toml`.
-
 ### Optional Local Flask Setup
 
 The original Flask app remains available for local development:
